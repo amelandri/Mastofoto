@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-28
+
+### Changed
+
+- The avatar and display name are now also clickable links to the author's profile, matching the existing `@username` link.
+- The "New" badge moved next to the timestamp (inside `.status-date`) instead of being pushed to the far right of the header on its own; its shape was also refined (smaller border-radius, adjusted padding).
+- The "New" highlight no longer tints the whole post card (removed background/left-border color) — it's now indicated by the badge alone.
+- The header logo is no longer wrapped in a link back to the homepage.
+- The "Change list"/"Log out" buttons are more subdued by default (lower opacity), becoming more visible on hover.
+
 ## [0.2.0] - 2026-08-28
 
 ### Added
