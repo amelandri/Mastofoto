@@ -150,10 +150,15 @@
     token: null,
     currentListId: null,
     nextMaxId: null,
+    lastSeenBefore: null,
   };
 
+  function lastSeenKey(listId) {
+    return `lastSeen:${listId}`;
+  }
+
   function formatStatusDate(dateStr) {
-    return new Date(dateStr).toLocaleString('it-IT', {
+    return new Date(dateStr).toLocaleString('en-GB', {
       day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
     });
   }
@@ -357,7 +362,16 @@
       state.nextMaxId = parseNextMaxId(res.headers.get('Link'), statuses);
       el.loadMoreBtn.classList.toggle('hidden', statuses.length === 0);
 
-      renderStatuses(statuses.filter(hasPhoto), append);
+      const photoStatuses = statuses.filter(hasPhoto);
+
+      if (!append) {
+        state.lastSeenBefore = getInstanceData(state.instance, lastSeenKey(state.currentListId));
+        if (photoStatuses.length) {
+          saveInstanceData(state.instance, { [lastSeenKey(state.currentListId)]: photoStatuses[0].created_at });
+        }
+      }
+
+      renderStatuses(photoStatuses, append);
     } catch (err) {
       showError(el.timelineError, err.message);
     }
@@ -398,9 +412,10 @@
   function renderStatusCard(status) {
     const isReblog = !!status.reblog;
     const original = isReblog ? status.reblog : status;
+    const isNew = !!state.lastSeenBefore && new Date(status.created_at) > new Date(state.lastSeenBefore);
 
     const card = document.createElement('div');
-    card.className = 'status-card';
+    card.className = isNew ? 'status-card is-new' : 'status-card';
 
     if (isReblog) {
       const banner = document.createElement('div');
@@ -417,6 +432,7 @@
         <div class="display-name">${escapeHtml(original.account.display_name || original.account.username)}</div>
         <div class="username">@${escapeHtml(original.account.acct)}</div>
       </div>
+      ${isNew ? '<span class="new-badge">New</span>' : ''}
       <div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>
     `;
     card.appendChild(header);

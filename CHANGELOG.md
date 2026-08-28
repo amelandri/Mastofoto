@@ -6,10 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- New posts (per list, since the previous visit to that list) are now highlighted with a "New" badge and a left accent border, based on a per-list "last seen" marker stored in `localStorage`.
+
 ### Changed
 
 - Translated all UI text to English (labels, buttons, error messages); `<html lang>` updated accordingly.
 - Added a catchier introductory blurb on the login page explaining what the app does, above the connect form.
+- Post dates now format with the `en-GB` locale instead of the leftover `it-IT` one, matching the rest of the translated UI.
 
 ## [0.1.0] - 2026-08-28
 
