@@ -41,3 +41,7 @@ There is no server behind this app, so no server ever stores any of your data. E
 - Single list at a time — not a general-purpose Mastodon client
 - No posting/composing new statuses
 - Photo filtering happens client-side after fetching a page of the timeline, so **Carica altri** may need a few clicks on quiet lists
+
+## License
+
+MIT — see [LICENSE](LICENSE).
