@@ -198,6 +198,11 @@ button:hover {
 .status-author .username {
   color: #666;
   font-size: 0.85rem;
+  text-decoration: none;
+}
+
+a.username:hover {
+  text-decoration: underline;
 }
 
 .status-date {
@@ -269,11 +274,20 @@ button:hover {
   gap: 10px;
 }
 
-.status-actions button {
+.status-actions button,
+.status-actions .view-original-btn {
   margin-top: 0;
   background: #eef1f4;
   color: #1c1e21;
   font-size: 0.85rem;
+}
+
+.status-actions .view-original-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
 }
 
 .status-actions button.active {

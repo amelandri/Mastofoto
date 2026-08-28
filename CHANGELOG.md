@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - New posts (per list, since the previous visit to that list) are now highlighted with a "New" badge and a left accent border, based on a per-list "last seen" marker stored in `localStorage`.
+- The author's username on each post now links to their profile on its origin Mastodon instance, opening in a new tab.
+- Added a "View post" link next to the favourite/reblog buttons, opening the original post on its origin instance in a new tab.
 
 ### Changed
 

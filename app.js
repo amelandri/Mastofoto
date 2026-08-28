@@ -430,7 +430,9 @@
       <img src="${escapeAttr(original.account.avatar)}" alt="">
       <div class="status-author">
         <div class="display-name">${escapeHtml(original.account.display_name || original.account.username)}</div>
-        <div class="username">@${escapeHtml(original.account.acct)}</div>
+        ${original.account.url && isHttpUrl(original.account.url)
+          ? `<a class="username" href="${escapeAttr(original.account.url)}" target="_blank" rel="noopener noreferrer">@${escapeHtml(original.account.acct)}</a>`
+          : `<div class="username">@${escapeHtml(original.account.acct)}</div>`}
       </div>
       ${isNew ? '<span class="new-badge">New</span>' : ''}
       <div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>
@@ -475,6 +477,16 @@
     }
     boostBtn.addEventListener('click', () => toggleReblog(original.id, boostBtn));
     actions.appendChild(boostBtn);
+
+    if (original.url && isHttpUrl(original.url)) {
+      const originalLink = document.createElement('a');
+      originalLink.className = 'view-original-btn';
+      originalLink.href = original.url;
+      originalLink.target = '_blank';
+      originalLink.rel = 'noopener noreferrer';
+      originalLink.textContent = '🔗 View post';
+      actions.appendChild(originalLink);
+    }
 
     card.appendChild(actions);
     return card;
