@@ -15,18 +15,22 @@ A static web app that shows only the photo posts from one Mastodon list, letting
 
 - A Mastodon account with at least one list already created, containing the accounts you want to follow
 - A modern browser
+- The app must be served from a stable `http(s)://` URL (e.g. GitHub Pages) — opening `index.html` directly as a `file://` page does not work, since Mastodon's OAuth flow (and some browsers' `fetch()` restrictions) require a real origin
 
 ## Getting started
 
-1. Open `index.html` in your browser (double-click, or serve the folder with a static file server such as `python3 -m http.server` if your browser blocks `fetch()` from `file://`).
-2. Enter your instance domain (e.g. `mastodon.social`) and click **Connetti**.
-3. Open the authorization link that appears, approve access on Mastodon, then copy the code it shows you back into the page and click **Verifica e accedi**.
-4. Choose which list to use — the app remembers it for next time.
-5. Browse, favourite, and boost the photo posts from that list. Use **Cambia lista** anytime to switch lists.
+1. Open the app at its hosted URL (e.g. `https://<username>.github.io/<repo>/`).
+2. Enter your instance domain (e.g. `mastodon.social`) and click **Connetti**. You'll be redirected to your instance to approve access, then sent straight back.
+3. Choose which list to use — the app remembers it for next time.
+4. Browse, favourite, and boost the photo posts from that list. Use **Cambia lista** anytime to switch lists.
 
 ## How authentication works
 
-Mastofoto registers itself as an OAuth app on your instance the first time you connect, then uses Mastodon's out-of-band (`urn:ietf:wg:oauth:2.0:oob`) flow: Mastodon displays an authorization code on screen instead of redirecting to a URL, so the app doesn't need to be hosted anywhere in particular. It requests only the `read`, `write:favourites`, and `write:statuses` scopes — it cannot post new statuses.
+Mastofoto registers itself as an OAuth app on your instance the first time you connect, then redirects you to your instance's authorization page and back to the app's own URL (whatever URL it's currently served from) once you approve. It requests only the `read`, `write:favourites`, and `write:statuses` scopes — it cannot post new statuses.
+
+## Hosting
+
+Since the app must be served over `http(s)://`, the simplest option is a free static host such as GitHub Pages: push this repository, then enable Pages in the repo settings (*Settings → Pages → Deploy from a branch → `main` / root*). No build step or server configuration is needed — the app adapts its OAuth redirect URL automatically to wherever it's hosted.
 
 ## Data & privacy
 

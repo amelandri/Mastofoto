@@ -10,21 +10,21 @@ Mastofoto is a static, single-user web app (`index.html` + `style.css` + `app.js
 
 There is no package manager, build step, linter, or test suite in this repo. To work on it:
 
-- Open `index.html` directly in a browser (double-click, or `open index.html` on macOS), or serve the directory with any static file server if the browser blocks `fetch()` from `file://` (e.g. `python3 -m http.server`).
+- Opening `index.html` directly as a `file://` page does **not** work for testing login — the OAuth redirect flow needs a real `http(s)://` origin (see Architecture below). Serve the directory instead, e.g. `python3 -m http.server`, and use `http://localhost:8000/`.
 - After editing `app.js`, check it parses with `node --check app.js` — this is the only automated verification available; there is no linter or test runner.
-- End-to-end testing (OAuth login, list fetching, favourite/reblog) requires a real Mastodon account/instance and cannot be simulated locally.
+- End-to-end testing (OAuth login, list fetching, favourite/reblog) requires a real Mastodon account/instance and cannot be simulated locally. The production deployment is GitHub Pages, serving from the `main` branch root.
 
 ## Architecture
 
 All logic lives in `app.js` as a single IIFE with a small `state` object (`instance`, `token`, `currentListId`, `nextMaxId`) and an `el` object caching DOM references. Views are plain `<section>`s in `index.html` shown/hidden via a `.hidden` CSS class (`login-view`, `list-setup-view`, `timeline-view`) — there is no router or framework.
 
-**Auth flow (OAuth2, out-of-band, no redirect URI):**
-1. User enters an instance domain. If no app credentials exist yet for that instance, `registerApp()` calls `POST /api/v1/apps` to dynamically register the app and stores `client_id`/`client_secret`.
-2. The authorize URL uses `redirect_uri = urn:ietf:wg:oauth:2.0:oob` so Mastodon displays the code on-screen instead of redirecting — this avoids needing a fixed hosting URL, which matters since the app may be run from `file://`.
-3. The user pastes the code back in; `exchangeCodeForToken()` calls `POST /oauth/token` and stores the resulting access token.
+**Auth flow (OAuth2, standard redirect):**
+1. `REDIRECT_URI` is computed once at load time as `window.location.origin + window.location.pathname` — it always points back at wherever the page is currently being served from, so no URL is hardcoded and the flow works unmodified on GitHub Pages, a custom domain, or `http://localhost` during local testing. This is also why a `file://` origin doesn't work: Mastodon requires a real, matching redirect URI.
+2. User enters an instance domain. If no app credentials exist yet for that instance, `registerApp()` calls `POST /api/v1/apps` to dynamically register the app (with `REDIRECT_URI`) and stores `client_id`/`client_secret`; the instance name is stashed in `localStorage` under `PENDING_INSTANCE_KEY` and the whole page navigates to the instance's `/oauth/authorize` URL (`window.location.href =`, not a popup/new tab).
+3. Mastodon redirects the browser back to `REDIRECT_URI` with `?code=...` (or `?error=...` if the user declines). On load, `init()` reads that query param, calls `completeAuthorization()` — which looks up the pending instance and its stored `client_id`/`client_secret`, exchanges the code via `exchangeCodeForToken()` (`POST /oauth/token`), and starts the session — then strips the query string with `history.replaceState()` so the code isn't left in the URL/history.
 4. Scope requested is `read write:favourites write:statuses` — enough for reading lists/timelines and for favouriting/reblogging, deliberately excluding general posting.
 
-All credentials (`clientId`, `clientSecret`, `accessToken`, `listId`) are namespaced per-instance in `localStorage` via `storageKey(instance, name)` (`mastofoto:<instance>:<name>`), plus a `mastofoto:lastInstance` pointer used to auto-resume a session on load. Because there is no backend, the client secret is necessarily exposed in the browser — acceptable for this single-user use case but worth remembering if the scope of the app ever changes.
+All credentials (`clientId`, `clientSecret`, `accessToken`, `listId`) are namespaced per-instance in `localStorage` via `storageKey(instance, name)` (`mastofoto:<instance>:<name>`), plus a `mastofoto:lastInstance` pointer used to auto-resume a session on load. Because there is no backend, the client secret is necessarily exposed in the browser — acceptable for this single-user use case but worth remembering if the scope of the app ever changes. Note that switching hosting origins (e.g. testing on `localhost` after having registered the app on the production URL) invalidates the cached `client_id`/`client_secret` for that instance, since Mastodon validates the redirect URI against what the app was registered with — clear that instance's localStorage entries (or log out) if authorization starts failing after a hosting change.
 
 **Logo asset:** `assets/logo.png` is a pre-rendered transparent PNG of the word "Mastofoto" set in the Google Font "Pacifico" — it exists specifically so the page never has to load a webfont at runtime. It was generated with Pillow (`ImageFont.truetype` + `ImageDraw.text`) from the actual Pacifico TTF (fetched from `fonts.gstatic.com`), not with a browser. To regenerate it (e.g. a different color/size), re-run that kind of script rather than trying to reintroduce a `<link>` to Google Fonts.
 

@@ -1,9 +1,10 @@
 (() => {
   'use strict';
 
-  const REDIRECT_URI = 'urn:ietf:wg:oauth:2.0:oob';
+  const REDIRECT_URI = window.location.origin + window.location.pathname;
   const SCOPES = 'read write:favourites write:statuses';
   const APP_NAME = 'Mastofoto';
+  const PENDING_INSTANCE_KEY = 'mastofoto:pendingInstance';
 
   // ---------- storage helpers ----------
 
@@ -158,11 +159,6 @@
     instanceInput: document.getElementById('instance-input'),
     connectBtn: document.getElementById('connect-btn'),
     loginError: document.getElementById('login-error'),
-    authorizeStep: document.getElementById('authorize-step'),
-    authorizeLink: document.getElementById('authorize-link'),
-    codeInput: document.getElementById('code-input'),
-    verifyBtn: document.getElementById('verify-btn'),
-    authError: document.getElementById('auth-error'),
     loginView: document.getElementById('login-view'),
     timelineView: document.getElementById('timeline-view'),
     sessionInfo: document.getElementById('session-info'),
@@ -178,8 +174,6 @@
     listSetupError: document.getElementById('list-setup-error'),
     noListMessage: document.getElementById('no-list-message'),
   };
-
-  let pendingRegistration = null;
 
   // ---------- login flow ----------
 
@@ -198,33 +192,31 @@
       }
       const app = await registerApp(instance);
       saveInstanceData(instance, { clientId: app.client_id, clientSecret: app.client_secret });
-      pendingRegistration = { instance, clientId: app.client_id, clientSecret: app.client_secret };
+      localStorage.setItem(PENDING_INSTANCE_KEY, instance);
 
       const authorizeUrl = `https://${instance}/oauth/authorize?client_id=${encodeURIComponent(app.client_id)}` +
         `&scope=${encodeURIComponent(SCOPES)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code`;
-      el.authorizeLink.href = authorizeUrl;
-      show(el.authorizeStep);
+      window.location.href = authorizeUrl;
     } catch (err) {
       showError(el.loginError, err.message);
     }
   });
 
-  el.verifyBtn.addEventListener('click', async () => {
-    hide(el.authError);
-    const code = el.codeInput.value.trim();
-    if (!code || !pendingRegistration) {
-      showError(el.authError, 'Incolla il codice di autorizzazione.');
-      return;
-    }
-    try {
-      const { instance, clientId, clientSecret } = pendingRegistration;
-      const tokenData = await exchangeCodeForToken(instance, clientId, clientSecret, code);
-      saveInstanceData(instance, { accessToken: tokenData.access_token });
-      await startSession(instance, tokenData.access_token);
-    } catch (err) {
-      showError(el.authError, err.message);
-    }
-  });
+  async function completeAuthorization(code) {
+    const instance = localStorage.getItem(PENDING_INSTANCE_KEY);
+    if (!instance) return false;
+    localStorage.removeItem(PENDING_INSTANCE_KEY);
+
+    const clientId = getInstanceData(instance, 'clientId');
+    const clientSecret = getInstanceData(instance, 'clientSecret');
+    if (!clientId || !clientSecret) return false;
+
+    el.instanceInput.value = instance;
+    const tokenData = await exchangeCodeForToken(instance, clientId, clientSecret, code);
+    saveInstanceData(instance, { accessToken: tokenData.access_token });
+    await startSession(instance, tokenData.access_token);
+    return true;
+  }
 
   el.logoutBtn.addEventListener('click', () => {
     if (state.instance) clearInstanceData(state.instance);
@@ -236,9 +228,7 @@
     hide(el.sessionInfo);
     show(el.loginView);
     el.instanceInput.value = '';
-    el.codeInput.value = '';
     el.currentInstance.textContent = '';
-    hide(el.authorizeStep);
   });
 
   el.changeListBtn.addEventListener('click', () => {
@@ -474,6 +464,29 @@
   // ---------- bootstrap ----------
 
   (async function init() {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const authError = params.get('error');
+
+    if (code || authError) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    if (authError) {
+      showError(el.loginError, `Autorizzazione negata dall'istanza (${authError}).`);
+      return;
+    }
+
+    if (code) {
+      try {
+        const handled = await completeAuthorization(code);
+        if (handled) return;
+      } catch (err) {
+        showError(el.loginError, err.message);
+        return;
+      }
+    }
+
     const lastInstance = localStorage.getItem('mastofoto:lastInstance');
     if (lastInstance) {
       const token = getInstanceData(lastInstance, 'accessToken');

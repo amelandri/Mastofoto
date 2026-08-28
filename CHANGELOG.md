@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- OAuth2 login against any Mastodon instance using the out-of-band (`urn:ietf:wg:oauth:2.0:oob`) flow, with dynamic app registration and per-instance session persistence in `localStorage`.
+- OAuth2 login against any Mastodon instance using the standard authorization-code redirect flow, with dynamic app registration and per-instance session persistence in `localStorage`. The redirect URL is derived automatically from wherever the app is hosted, so it requires serving the app over `http(s)://` (e.g. GitHub Pages) rather than opening `index.html` as a `file://` page.
 - List configuration screen to choose which Mastodon list to follow, with a "Cambia lista" action to switch later.
 - Timeline view for the selected list, filtered to show only posts (and boosts) containing photos.
 - Favourite and reblog actions on each post, reflecting live counts/state from the API.
