@@ -46,7 +46,7 @@
         scopes: SCOPES,
       }),
     });
-    if (!res.ok) throw new Error(`Registrazione app fallita (${res.status})`);
+    if (!res.ok) throw new Error(`App registration failed (${res.status})`);
     return res.json();
   }
 
@@ -63,7 +63,7 @@
         scope: SCOPES,
       }),
     });
-    if (!res.ok) throw new Error(`Scambio del codice fallito (${res.status})`);
+    if (!res.ok) throw new Error(`Code exchange failed (${res.status})`);
     return res.json();
   }
 
@@ -75,7 +75,7 @@
         Authorization: `Bearer ${token}`,
       },
     });
-    if (!res.ok) throw new Error(`Richiesta API fallita: ${path} (${res.status})`);
+    if (!res.ok) throw new Error(`API request failed: ${path} (${res.status})`);
     return res;
   }
 
@@ -211,7 +211,7 @@
     hide(el.loginError);
     const instance = normalizeInstance(el.instanceInput.value);
     if (!instance) {
-      showError(el.loginError, 'Inserisci il dominio di un\'istanza.');
+      showError(el.loginError, 'Enter an instance domain.');
       return;
     }
     try {
@@ -241,7 +241,7 @@
     localStorage.removeItem(PENDING_STATE_KEY);
 
     if (!instance || !expectedState || returnedState !== expectedState) {
-      throw new Error('Verifica di sicurezza della risposta OAuth fallita. Riprova ad accedere.');
+      throw new Error('OAuth response security check failed. Please try logging in again.');
     }
 
     const clientId = getInstanceData(instance, 'clientId');
@@ -405,7 +405,7 @@
     if (isReblog) {
       const banner = document.createElement('div');
       banner.className = 'reblog-banner';
-      banner.textContent = `🔁 ${status.account.display_name || status.account.username} ha condiviso`;
+      banner.textContent = `🔁 ${status.account.display_name || status.account.username} boosted`;
       card.appendChild(banner);
     }
 
@@ -514,7 +514,7 @@
     }
 
     if (authError) {
-      showError(el.loginError, `Autorizzazione negata dall'istanza (${authError}).`);
+      showError(el.loginError, `Authorization denied by the instance (${authError}).`);
       return;
     }
 

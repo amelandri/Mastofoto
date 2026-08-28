@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,8 +20,8 @@
       <span id="current-instance" class="instance-label"></span>
     </div>
     <div id="session-info" class="hidden">
-      <button id="change-list-btn">Cambia lista</button>
-      <button id="logout-btn">Disconnetti</button>
+      <button id="change-list-btn">Change list</button>
+      <button id="logout-btn">Log out</button>
     </div>
   </div>
 </header>
@@ -30,27 +30,35 @@
 
   <section id="login-view">
     <div class="card">
-      <h2>Connetti la tua istanza Mastodon</h2>
-      <label for="instance-input">Dominio istanza (es. mastodon.social)</label>
+      <p class="intro">Turn one Mastodon list into a beautiful, distraction-free photo feed. Connect your account, pick a list, and only the photos show up — ready to favourite or boost without ever leaving the feed.</p>
+
+      <h2>Connect your Mastodon instance</h2>
+      <label for="instance-input">Instance domain (e.g. mastodon.social)</label>
       <div class="form-row">
-        <input type="text" id="instance-input" placeholder="mastodon.uno">
-        <button id="connect-btn">Connetti</button>
+        <input type="text" id="instance-input" placeholder="mastodon.social">
+        <button id="connect-btn">Connect</button>
       </div>
       <p id="login-error" class="error hidden"></p>
-      <p class="privacy-note">🔒 Nessuna informazione viene memorizzata su un server: l'app comunica direttamente con la tua istanza Mastodon e il token di accesso resta salvato solo nello storage del tuo browser.</p>
+      <p class="privacy-note">🔒 
+      Mastofoto is a static, single-user web app that lets you log into a Mastodon instance, pick one Mastodon list, and view only the posts in that list that contain photos (image attachments), with the ability to favourite and reblog them.
+      <br /><br />
+      No information is stored on any server: this app talks directly to your Mastodon instance, and your access token stays only in your browser's storage.
+      <br /><br />
+      It runs entirely client-side against the Mastodon REST API — there is no backend, no build step, and no database. All persisted state lives in the browser's `localStorage`. 
+      The page has no external dependencies besides the Mastodon instance itself.</p>
     </div>
   </section>
 
   <section id="list-setup-view" class="hidden">
     <div class="card">
-      <h2>Scegli la lista da usare</h2>
-      <label for="list-select">Lista</label>
+      <h2>Choose which list to use</h2>
+      <label for="list-select">List</label>
       <div class="form-row">
         <select id="list-select"></select>
-        <button id="use-list-btn">Usa questa lista</button>
+        <button id="use-list-btn">Use this list</button>
       </div>
       <p id="list-setup-error" class="error hidden"></p>
-      <p id="no-list-message" class="hint hidden">Nessuna lista trovata. Crea una lista su Mastodon e associale gli account da seguire.</p>
+      <p id="no-list-message" class="hint hidden">No lists found. Create a list on Mastodon and add the accounts you want to follow to it.</p>
     </div>
   </section>
 
@@ -58,7 +66,7 @@
     <div id="timeline-container">
       <p id="timeline-error" class="error hidden"></p>
       <div id="statuses"></div>
-      <button id="load-more-btn" class="hidden">Carica altri</button>
+      <button id="load-more-btn" class="hidden">Load more</button>
     </div>
   </section>
 

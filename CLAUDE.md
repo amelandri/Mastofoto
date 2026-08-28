@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Mastofoto is a static, single-user web app (`index.html` + `style.css` + `app.js`) that lets someone log into a Mastodon instance, pick one Mastodon list, and view only the posts in that list that contain photos (image attachments), with the ability to favourite and reblog them. It runs entirely client-side against the Mastodon REST API — there is no backend, no build step, and no database. All persisted state lives in the browser's `localStorage`. The page has no external dependencies besides the Mastodon instance itself; the header wordmark is a pre-rendered static image (`assets/logo.png`) rather than a webfont, so nothing is fetched from a font CDN at runtime.
+Mastofoto is a static, single-user web app (`index.html` + `style.css` + `app.js`) that lets someone log into a Mastodon instance, pick one Mastodon list, and view only the posts in that list that contain photos (image attachments), with the ability to favourite and reblog them. It runs entirely client-side against the Mastodon REST API — there is no backend, no build step, and no database. All persisted state lives in the browser's `localStorage`. The page has no external dependencies besides the Mastodon instance itself; the header wordmark is a pre-rendered static image (`assets/logo.png`) rather than a webfont, so nothing is fetched from a font CDN at runtime. All UI copy (labels, buttons, error messages) is in English (`<html lang="en">`) — the app was originally built with Italian strings, fully translated later, so don't reintroduce Italian text when adding new user-facing strings.
 
 ## Development
 

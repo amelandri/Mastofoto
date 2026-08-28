@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Translated all UI text to English (labels, buttons, error messages); `<html lang>` updated accordingly.
+- Added a catchier introductory blurb on the login page explaining what the app does, above the connect form.
+
 ## [0.1.0] - 2026-08-28
 
 ### Added
