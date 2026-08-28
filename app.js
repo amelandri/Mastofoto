@@ -427,15 +427,15 @@
     const header = document.createElement('div');
     header.className = 'status-header';
     header.innerHTML = `
-      <img src="${escapeAttr(original.account.avatar)}" alt="">
+      <a href="${escapeAttr(original.account.url)}" target="_blank" rel="noopener noreferrer"><img src="${escapeAttr(original.account.avatar)}" alt=""></a>
       <div class="status-author">
-        <div class="display-name">${escapeHtml(original.account.display_name || original.account.username)}</div>
+        <div class="display-name"><a href="${escapeAttr(original.account.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(original.account.display_name || original.account.username)}</a></div>
         ${original.account.url && isHttpUrl(original.account.url)
           ? `<a class="username" href="${escapeAttr(original.account.url)}" target="_blank" rel="noopener noreferrer">@${escapeHtml(original.account.acct)}</a>`
           : `<div class="username">@${escapeHtml(original.account.acct)}</div>`}
       </div>
-      ${isNew ? '<span class="new-badge">New</span>' : ''}
-      <div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>
+      
+      <div class="status-date">${isNew ? '<span class="new-badge">New</span>' : ''} ${escapeHtml(formatStatusDate(original.created_at))}</div>
     `;
     card.appendChild(header);
 
