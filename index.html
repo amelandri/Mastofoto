@@ -91,6 +91,17 @@
         <li>Click any photo to view it full-size</li>
       </ul>
 
+      <h3>Security &amp; data</h3>
+      <ul>
+        <li>There is no server: Mastofoto is a static page that talks directly to your Mastodon instance from your browser. Nothing you do here is seen or stored by anyone else.</li>
+        <li>Your login credentials and access token are stored only in this browser's local storage, kept separate per Mastodon instance, and are cleared when you log out. Your chosen list is remembered even after logging out, ready again next time you sign back in.</li>
+        <li>Login uses Mastodon's standard OAuth flow with a random, one-time <code>state</code> value checked on return, so a login started here can't be hijacked or completed with someone else's authorization.</li>
+        <li>The app only ever requests permission to read your timeline and to favourite/reblog — it can never post, delete, or follow on your behalf.</li>
+        <li>Post content is run through an allowlist filter before being displayed, and only <code>http(s)</code> links are ever made clickable.</li>
+        <li>The page is served over HTTPS and sets a Content-Security-Policy restricting where scripts and styles may load from.</li>
+        <li>Because there's no backend, the app's own OAuth client credentials are visible in your browser — normal for a purely client-side app like this one, and not something that exposes your account or password.</li>
+      </ul>
+
       <p>Mastofoto is open source, released under the MIT license.<br>
       <a href="https://github.com/amelandri/Mastofoto" target="_blank" rel="noopener noreferrer">View the source on GitHub →</a></p>
     </div>

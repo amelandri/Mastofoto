@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- A "Security & data" section on the "About Mastofoto" page, summarizing in plain language: no server/no data collection, per-instance local-storage-only credentials, the OAuth `state` CSRF protection, the limited read/favourite/reblog scope, content sanitization, HTTPS + CSP, and the client-secret-in-browser caveat inherent to a backend-less app.
+
 ## [0.3.0] - 2026-08-28
 
 ### Added
