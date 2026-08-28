@@ -1,0 +1,214 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f2f3f5;
+  color: #1c1e21;
+}
+
+#app-header {
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 0 20px;
+}
+
+.header-inner {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand .logo {
+  height: 34px;
+  width: auto;
+  display: block;
+}
+
+.instance-label {
+  margin-top: 2px;
+  font-size: 0.7rem;
+  color: #888;
+}
+
+#session-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#session-info button {
+  background: #eef1f4;
+  color: #1c1e21;
+  border: 1px solid #ccd0d5;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#app {
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+label {
+  display: block;
+  margin: 10px 0 4px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+input[type="text"], select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccd0d5;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #fff;
+}
+
+button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #2b90d9;
+  color: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.error {
+  color: #d13c3c;
+  margin-top: 10px;
+}
+
+.hint {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+#timeline-container {
+  min-width: 0;
+}
+
+.status-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 50px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.reblog-banner {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.status-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.status-header img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.status-author .display-name {
+  font-weight: 600;
+}
+
+.status-author .username {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.status-date {
+  margin-left: auto;
+  color: #666;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.status-content {
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.status-content p {
+  margin: 0 0 8px;
+}
+
+.status-content a {
+  color: #2b90d9;
+}
+
+.status-content a.tag-link {
+  color: #8a8d91;
+  font-size: 0.85em;
+  text-decoration: none;
+}
+
+.status-media {
+  margin-bottom: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 6px;
+}
+
+.status-media img, .status-media video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.status-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+.status-actions button {
+  margin-top: 0;
+  background: #eef1f4;
+  color: #1c1e21;
+  font-size: 0.85rem;
+}
+
+.status-actions button.active {
+  background: #2b90d9;
+  color: #fff;
+}
+
+#load-more-btn {
+  display: block;
+  margin: 10px auto;
+}

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mastofoto</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header id="app-header">
+  <div class="header-inner">
+    <div class="brand">
+      <img src="assets/logo.png" alt="Mastofoto" class="logo">
+      <span id="current-instance" class="instance-label"></span>
+    </div>
+    <div id="session-info" class="hidden">
+      <button id="change-list-btn">Cambia lista</button>
+      <button id="logout-btn">Disconnetti</button>
+    </div>
+  </div>
+</header>
+
+<main id="app">
+
+  <section id="login-view">
+    <div class="card">
+      <h2>Connetti la tua istanza Mastodon</h2>
+      <label for="instance-input">Dominio istanza (es. mastodon.social)</label>
+      <input type="text" id="instance-input" placeholder="mastodon.social">
+      <button id="connect-btn">Connetti</button>
+      <p id="login-error" class="error hidden"></p>
+    </div>
+
+    <div class="card hidden" id="authorize-step">
+      <h2>Autorizza l'applicazione</h2>
+      <p>1. Apri il link qui sotto in una nuova scheda e autorizza l'accesso.</p>
+      <p><a id="authorize-link" href="#" target="_blank" rel="noopener noreferrer">Apri pagina di autorizzazione</a></p>
+      <p>2. Copia il codice mostrato da Mastodon e incollalo qui:</p>
+      <label for="code-input">Codice di autorizzazione</label>
+      <input type="text" id="code-input" placeholder="Incolla il codice">
+      <button id="verify-btn">Verifica e accedi</button>
+      <p id="auth-error" class="error hidden"></p>
+    </div>
+  </section>
+
+  <section id="list-setup-view" class="hidden">
+    <div class="card">
+      <h2>Scegli la lista da usare</h2>
+      <label for="list-select">Lista</label>
+      <select id="list-select"></select>
+      <button id="use-list-btn">Usa questa lista</button>
+      <p id="list-setup-error" class="error hidden"></p>
+      <p id="no-list-message" class="hint hidden">Nessuna lista trovata. Crea una lista su Mastodon e associale gli account da seguire.</p>
+    </div>
+  </section>
+
+  <section id="timeline-view" class="hidden">
+    <div id="timeline-container">
+      <p id="timeline-error" class="error hidden"></p>
+      <div id="statuses"></div>
+      <button id="load-more-btn" class="hidden">Carica altri</button>
+    </div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
