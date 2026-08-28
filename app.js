@@ -183,7 +183,27 @@
     useListBtn: document.getElementById('use-list-btn'),
     listSetupError: document.getElementById('list-setup-error'),
     noListMessage: document.getElementById('no-list-message'),
+    lightbox: document.getElementById('lightbox'),
+    lightboxImg: document.getElementById('lightbox-img'),
   };
+
+  // ---------- lightbox ----------
+
+  function openLightbox(src, alt) {
+    el.lightboxImg.src = src;
+    el.lightboxImg.alt = alt || '';
+    show(el.lightbox);
+  }
+
+  function closeLightbox() {
+    hide(el.lightbox);
+    el.lightboxImg.src = '';
+  }
+
+  el.lightbox.addEventListener('click', closeLightbox);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLightbox();
+  });
 
   // ---------- login flow ----------
 
@@ -359,8 +379,11 @@
     original.media_attachments.forEach(att => {
       if (att.type === 'image') {
         const img = document.createElement('img');
-        img.src = att.preview_url || att.url;
+        const fullSrc = att.url || att.preview_url;
+        img.src = fullSrc;
         img.alt = att.description || '';
+        img.loading = 'lazy';
+        img.addEventListener('click', () => openLightbox(fullSrc, att.description));
         media.appendChild(img);
       } else if (att.type === 'video' || att.type === 'gifv') {
         const video = document.createElement('video');
