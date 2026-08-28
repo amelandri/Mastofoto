@@ -6,9 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-28
+
 ### Added
 
 - A "Security & data" section on the "About Mastofoto" page, summarizing in plain language: no server/no data collection, per-instance local-storage-only credentials, the OAuth `state` CSRF protection, the limited read/favourite/reblog scope, content sanitization, HTTPS + CSP, and the client-secret-in-browser caveat inherent to a backend-less app.
+- The app version number is now displayed on the "About Mastofoto" page, sourced from a single `APP_VERSION` constant in `app.js`.
 
 ## [0.3.0] - 2026-08-28
 

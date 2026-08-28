@@ -1,6 +1,7 @@
 (() => {
   'use strict';
 
+  const APP_VERSION = '0.3.1';
   const REDIRECT_URI = window.location.origin + window.location.pathname;
   const SCOPES = 'read write:favourites write:statuses';
   const APP_NAME = 'Mastofoto';
@@ -194,7 +195,10 @@
     lightboxImg: document.getElementById('lightbox-img'),
     infoBtn: document.getElementById('info-btn'),
     infoView: document.getElementById('info-view'),
+    appVersion: document.getElementById('app-version'),
   };
+
+  el.appVersion.textContent = APP_VERSION;
 
   // ---------- lightbox ----------
 
