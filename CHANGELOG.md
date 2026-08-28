@@ -22,6 +22,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Each post now shows its publication date/time, right-aligned next to the author.
 - Header redesigned: content width now matches the post feed, the blue background was removed in favor of a plain header with a bottom border, and the "Mastofoto" wordmark is now a static image (`assets/logo.png`) instead of a live Google Fonts dependency.
 - The connected instance domain is now shown under the logo in small type, instead of next to the account buttons.
+- Login and list-selection forms: the button now sits inline next to its input/select instead of stacked below it.
+
+### Added
+
+- A privacy notice on the login page stating that no data is stored on a server and the access token lives only in the browser's storage; documented in the README as well.
 
 ### Removed
 

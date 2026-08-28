@@ -34,7 +34,7 @@ Since the app must be served over `http(s)://`, the simplest option is a free st
 
 ## Data & privacy
 
-Everything (app credentials, access token, chosen list) is stored in your browser's `localStorage`, scoped per Mastodon instance. Nothing is sent anywhere except directly to your chosen Mastodon instance. Because there's no backend, the OAuth client secret is visible in the browser — acceptable for personal use, but don't treat it as a secret.
+There is no server behind this app, so no server ever stores any of your data. Everything (app credentials, access token, chosen list) is stored only in your own browser's `localStorage`, scoped per Mastodon instance, and never leaves your machine except in requests sent directly to your chosen Mastodon instance. This is also stated as a notice on the login page. Because there's no backend, the OAuth client secret is visible in the browser — acceptable for personal use, but don't treat it as a secret.
 
 ## Limitations
 

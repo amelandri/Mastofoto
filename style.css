@@ -8,8 +8,6 @@ body {
 }
 
 #app-header {
-  background: #fff;
-  border-bottom: 1px solid #e0e0e0;
   padding: 0 20px;
 }
 
@@ -36,13 +34,15 @@ body {
 .instance-label {
   margin-top: 2px;
   font-size: 0.7rem;
-  color: #888;
+  color: #979797;
+  padding-left: 0.4rem;
 }
 
 #session-info {
   display: flex;
   align-items: center;
   gap: 12px;
+  
 }
 
 #session-info button {
@@ -85,6 +85,21 @@ input[type="text"], select {
   background: #fff;
 }
 
+.form-row {
+  display: flex;
+  gap: 8px;
+}
+
+.form-row input[type="text"],
+.form-row select {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-row button {
+  flex-shrink: 0;
+}
+
 button {
   padding: 8px 16px;
   border: none;
@@ -107,6 +122,15 @@ button:hover {
 .hint {
   color: #666;
   font-size: 0.85rem;
+}
+
+.privacy-note {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+  color: #777;
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 #timeline-container {
@@ -152,7 +176,7 @@ button:hover {
 
 .status-date {
   margin-left: auto;
-  color: #666;
+  color: #a8a8a8;
   font-size: 0.8rem;
   white-space: nowrap;
 }

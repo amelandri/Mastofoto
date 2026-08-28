@@ -11,7 +11,9 @@
 <header id="app-header">
   <div class="header-inner">
     <div class="brand">
-      <img src="assets/logo.png" alt="Mastofoto" class="logo">
+      <a href="/Mastofoto/">
+        <img src="assets/logo.png" alt="Mastofoto" class="logo">
+      </a>
       <span id="current-instance" class="instance-label"></span>
     </div>
     <div id="session-info" class="hidden">
@@ -27,9 +29,12 @@
     <div class="card">
       <h2>Connetti la tua istanza Mastodon</h2>
       <label for="instance-input">Dominio istanza (es. mastodon.social)</label>
-      <input type="text" id="instance-input" placeholder="mastodon.social">
-      <button id="connect-btn">Connetti</button>
+      <div class="form-row">
+        <input type="text" id="instance-input" placeholder="mastodon.social">
+        <button id="connect-btn">Connetti</button>
+      </div>
       <p id="login-error" class="error hidden"></p>
+      <p class="privacy-note">🔒 Nessuna informazione viene memorizzata su un server: l'app comunica direttamente con la tua istanza Mastodon e il token di accesso resta salvato solo nello storage del tuo browser.</p>
     </div>
   </section>
 
@@ -37,8 +42,10 @@
     <div class="card">
       <h2>Scegli la lista da usare</h2>
       <label for="list-select">Lista</label>
-      <select id="list-select"></select>
-      <button id="use-list-btn">Usa questa lista</button>
+      <div class="form-row">
+        <select id="list-select"></select>
+        <button id="use-list-btn">Usa questa lista</button>
+      </div>
       <p id="list-setup-error" class="error hidden"></p>
       <p id="no-list-message" class="hint hidden">Nessuna lista trovata. Crea una lista su Mastodon e associale gli account da seguire.</p>
     </div>
