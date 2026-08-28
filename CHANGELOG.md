@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Timeline view for the selected list, filtered to show only posts (and boosts) containing photos.
 - Favourite and reblog actions on each post, reflecting live counts/state from the API.
 - Content-warning posts collapsed behind a toggle, with an allowlist-based HTML sanitizer for status content.
+- A privacy notice on the login page stating that no data is stored on a server and the access token lives only in the browser's storage; documented in the README as well.
+- Favicon (`assets/favicon.png`/`.ico`), generated from the "M" of the logo wordmark in the same font and color.
 
 ### Changed
 
@@ -24,10 +26,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The connected instance domain is now shown under the logo in small type, instead of next to the account buttons.
 - Login and list-selection forms: the button now sits inline next to its input/select instead of stacked below it.
 
-### Added
+### Security
 
-- A privacy notice on the login page stating that no data is stored on a server and the access token lives only in the browser's storage; documented in the README as well.
-- Favicon (`assets/favicon.png`/`.ico`), generated from the "M" of the logo wordmark in the same font and color.
+- OAuth login now uses a random `state` parameter, verified on the redirect callback against the value stored before leaving for the instance's authorization page — closes a login-CSRF gap where a stale pending login could be completed with an authorization code the user never approved.
+- Link sanitization in post content switched from blocking only `javascript:` URLs to allowlisting `http:`/`https:` only, closing off other potentially dangerous URL schemes.
+- Added a `Content-Security-Policy` meta tag (`script-src 'self'`, `object-src 'none'`, `form-action 'none'`, etc.) as defense-in-depth against script injection, since the app has no server to send real CSP/security headers.
 
 ### Removed
 

@@ -5,6 +5,7 @@
   const SCOPES = 'read write:favourites write:statuses';
   const APP_NAME = 'Mastofoto';
   const PENDING_INSTANCE_KEY = 'mastofoto:pendingInstance';
+  const PENDING_STATE_KEY = 'mastofoto:pendingState';
 
   // ---------- storage helpers ----------
 
@@ -98,6 +99,15 @@
 
   const ALLOWED_TAGS = new Set(['A', 'P', 'BR', 'SPAN', 'STRONG', 'B', 'EM', 'I', 'DEL', 'CODE', 'PRE', 'UL', 'OL', 'LI', 'BLOCKQUOTE']);
 
+  function isHttpUrl(value) {
+    try {
+      const url = new URL(value, window.location.href);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }
+
   function sanitizeStatusHtml(html) {
     const doc = new DOMParser().parseFromString(html || '', 'text/html');
     const walk = (node) => {
@@ -113,7 +123,7 @@
 
           [...child.attributes].forEach(attr => {
             if (child.tagName === 'A' && attr.name === 'href') {
-              if (/^\s*javascript:/i.test(attr.value)) child.removeAttribute('href');
+              if (!isHttpUrl(attr.value)) child.removeAttribute('href');
               return;
             }
             child.removeAttribute(attr.name);
@@ -192,20 +202,27 @@
       }
       const app = await registerApp(instance);
       saveInstanceData(instance, { clientId: app.client_id, clientSecret: app.client_secret });
+      const csrfState = crypto.randomUUID();
       localStorage.setItem(PENDING_INSTANCE_KEY, instance);
+      localStorage.setItem(PENDING_STATE_KEY, csrfState);
 
       const authorizeUrl = `https://${instance}/oauth/authorize?client_id=${encodeURIComponent(app.client_id)}` +
-        `&scope=${encodeURIComponent(SCOPES)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code`;
+        `&scope=${encodeURIComponent(SCOPES)}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&state=${encodeURIComponent(csrfState)}`;
       window.location.href = authorizeUrl;
     } catch (err) {
       showError(el.loginError, err.message);
     }
   });
 
-  async function completeAuthorization(code) {
+  async function completeAuthorization(code, returnedState) {
     const instance = localStorage.getItem(PENDING_INSTANCE_KEY);
-    if (!instance) return false;
+    const expectedState = localStorage.getItem(PENDING_STATE_KEY);
     localStorage.removeItem(PENDING_INSTANCE_KEY);
+    localStorage.removeItem(PENDING_STATE_KEY);
+
+    if (!instance || !expectedState || returnedState !== expectedState) {
+      throw new Error('Verifica di sicurezza della risposta OAuth fallita. Riprova ad accedere.');
+    }
 
     const clientId = getInstanceData(instance, 'clientId');
     const clientSecret = getInstanceData(instance, 'clientSecret');
@@ -466,6 +483,7 @@
   (async function init() {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
+    const returnedState = params.get('state');
     const authError = params.get('error');
 
     if (code || authError) {
@@ -479,7 +497,7 @@
 
     if (code) {
       try {
-        const handled = await completeAuthorization(code);
+        const handled = await completeAuthorization(code, returnedState);
         if (handled) return;
       } catch (err) {
         showError(el.loginError, err.message);
