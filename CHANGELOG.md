@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-28
+
+### Added
+
+- The list-selection screen now shows the members of the currently selected list, alphabetically by display name, refreshing as you change the dropdown. Each member's name links to their profile, and the list is shown in full without its own scroll area.
+- Added a "Home Page" link next to the list-selection heading, right-aligned, pointing back to the app's own root regardless of where it's hosted.
+- Added an "i" info button next to "Log out", opening a dedicated "About Mastofoto" page (same layout as list selection) with an app overview, feature list, and a link to the open-source GitHub repository (MIT license).
+
+### Changed
+
+- README now leads with a note that the project is built through "vibe coding" (conversational, AI-assisted development), and its remaining Italian button labels (leftover from before the UI translation) were corrected to match the current English UI.
+- Renamed the "Change list" button to "List Management"; README's feature list and instructions updated to match, and expanded to mention list member previews, full-resolution photos, the lightbox, and the "View post" link.
+
 ## [0.2.1] - 2026-08-28
 
 ### Changed

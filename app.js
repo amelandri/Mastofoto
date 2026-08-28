@@ -188,8 +188,12 @@
     useListBtn: document.getElementById('use-list-btn'),
     listSetupError: document.getElementById('list-setup-error'),
     noListMessage: document.getElementById('no-list-message'),
+    listMembersHeading: document.getElementById('list-members-heading'),
+    listMembers: document.getElementById('list-members'),
     lightbox: document.getElementById('lightbox'),
     lightboxImg: document.getElementById('lightbox-img'),
+    infoBtn: document.getElementById('info-btn'),
+    infoView: document.getElementById('info-view'),
   };
 
   // ---------- lightbox ----------
@@ -208,6 +212,14 @@
   el.lightbox.addEventListener('click', closeLightbox);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeLightbox();
+  });
+
+  // ---------- info page ----------
+
+  el.infoBtn.addEventListener('click', () => {
+    hide(el.timelineView);
+    hide(el.listSetupView);
+    show(el.infoView);
   });
 
   // ---------- login flow ----------
@@ -287,6 +299,38 @@
     await selectList(listId);
   });
 
+  el.listSelect.addEventListener('change', () => {
+    if (el.listSelect.value) loadListMembers(el.listSelect.value);
+  });
+
+  async function loadListMembers(listId) {
+    el.listMembers.innerHTML = '';
+    hide(el.listMembersHeading);
+    try {
+      const res = await apiFetch(state.instance, state.token, `/api/v1/lists/${listId}/accounts?limit=80`);
+      const accounts = await res.json();
+      accounts.sort((a, b) =>
+        (a.display_name || a.username).localeCompare(b.display_name || b.username, undefined, { sensitivity: 'base' })
+      );
+
+      show(el.listMembersHeading);
+      accounts.forEach(account => {
+        const item = document.createElement('li');
+        const name = escapeHtml(account.display_name || account.username);
+        item.innerHTML = `
+          <img src="${escapeAttr(account.avatar)}" alt="">
+          ${account.url && isHttpUrl(account.url)
+            ? `<a class="member-name" href="${escapeAttr(account.url)}" target="_blank" rel="noopener noreferrer">${name}</a>`
+            : `<span class="member-name">${name}</span>`}
+          <span class="member-handle">@${escapeHtml(account.acct)}</span>
+        `;
+        el.listMembers.appendChild(item);
+      });
+    } catch (err) {
+      showError(el.listSetupError, err.message);
+    }
+  }
+
   async function startSession(instance, token) {
     // verify token is still valid
     await apiFetch(instance, token, '/api/v1/accounts/verify_credentials');
@@ -312,7 +356,9 @@
   async function showListSetup(preselectListId) {
     hide(el.listSetupError);
     hide(el.noListMessage);
+    hide(el.listMembersHeading);
     el.listSelect.innerHTML = '';
+    el.listMembers.innerHTML = '';
     show(el.listSetupView);
 
     try {
@@ -335,6 +381,8 @@
         if (preselectListId && String(preselectListId) === String(list.id)) option.selected = true;
         el.listSelect.appendChild(option);
       });
+
+      if (el.listSelect.value) await loadListMembers(el.listSelect.value);
     } catch (err) {
       showError(el.listSetupError, err.message);
     }

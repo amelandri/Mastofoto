@@ -18,8 +18,9 @@
       <span id="current-instance" class="instance-label"></span>
     </div>
     <div id="session-info" class="hidden">
-      <button id="change-list-btn">Change list</button>
+      <button id="change-list-btn">List Management</button>
       <button id="logout-btn">Log out</button>
+      <button id="info-btn" class="icon-btn" aria-label="About Mastofoto" title="About Mastofoto">i</button>
     </div>
   </div>
 </header>
@@ -31,9 +32,9 @@
       <p class="intro">Turn one Mastodon list into a beautiful, distraction-free photo feed. Connect your account, pick a list, and only the photos show up — ready to favourite or boost without ever leaving the feed.</p>
 
       <h2>Connect your Mastodon instance</h2>
-      <label for="instance-input">Instance domain (e.g. mastodon.social)</label>
+      <label for="instance-input">Instance domain (e.g. mastodon.uno)</label>
       <div class="form-row">
-        <input type="text" id="instance-input" placeholder="mastodon.social">
+        <input type="text" id="instance-input" placeholder="mastodon.uno">
         <button id="connect-btn">Connect</button>
       </div>
       <p id="login-error" class="error hidden"></p>
@@ -49,14 +50,18 @@
 
   <section id="list-setup-view" class="hidden">
     <div class="card">
-      <h2>Choose which list to use</h2>
-      <label for="list-select">List</label>
+      <div class="section-header">
+        <h2>Choose which list to use</h2>
+        <a href="." class="home-link">← Home Page</a>
+      </div>
       <div class="form-row">
         <select id="list-select"></select>
         <button id="use-list-btn">Use this list</button>
       </div>
       <p id="list-setup-error" class="error hidden"></p>
       <p id="no-list-message" class="hint hidden">No lists found. Create a list on Mastodon and add the accounts you want to follow to it.</p>
+      <h3 id="list-members-heading" class="hint hidden">Members</h3>
+      <ul id="list-members"></ul>
     </div>
   </section>
 
@@ -65,6 +70,29 @@
       <p id="timeline-error" class="error hidden"></p>
       <div id="statuses"></div>
       <button id="load-more-btn" class="hidden">Load more</button>
+    </div>
+  </section>
+
+  <section id="info-view" class="hidden">
+    <div class="card">
+      <div class="section-header">
+        <h2>About Mastofoto</h2>
+        <a href="." class="home-link">← Home Page</a>
+      </div>
+      <p>Mastofoto turns one Mastodon list into a clean, distraction-free photo feed. <br />Connect your account, pick a list, and only the photos show up, ready to favourite or boost.</p>
+
+      <h3>Features</h3>
+      <ul>
+        <li>Log in with any Mastodon instance — no server-side setup required</li>
+        <li>Choose which list to follow, with a preview of its members</li>
+        <li>See only posts (and boosts) containing photos, at full resolution</li>
+        <li>Favourite and reblog directly from the feed</li>
+        <li>New posts are highlighted since your last visit</li>
+        <li>Click any photo to view it full-size</li>
+      </ul>
+
+      <p>Mastofoto is open source, released under the MIT license.<br>
+      <a href="https://github.com/amelandri/Mastofoto" target="_blank" rel="noopener noreferrer">View the source on GitHub →</a></p>
     </div>
   </section>
 

@@ -2,12 +2,15 @@
 
 A static web app that shows only the photo posts from one Mastodon list, letting you favourite and reblog them — no backend, no database, runs entirely in the browser.
 
+> **Built with vibe coding.** This project is developed almost entirely through conversational, natural-language prompting with an AI coding assistant (Claude Code) rather than traditional hand-written development. Features, fixes, and refactors are driven by iterative requests rather than a fixed upfront design — keep that in mind if you're reading the code, reviewing a change, or reporting an issue.
+
 ## Features
 
 - Login via Mastodon OAuth, with the app registering itself on your instance automatically (no server-side redirect needed)
-- Configure which Mastodon list to follow, and switch it later
-- Shows only posts (and boosts) that contain photos
-- Favourite (⭐) and reblog (🔁) directly from the feed
+- Configure which Mastodon list to follow, preview its members, and switch it later
+- Shows only posts (and boosts) that contain photos, at full resolution, with a click-to-enlarge lightbox
+- Favourite (⭐), reblog (🔁), and jump to the original post directly from the feed
+- New posts highlighted since your last visit
 - Content-warning posts collapsed behind a toggle
 - Session persisted per instance in the browser
 
@@ -20,9 +23,9 @@ A static web app that shows only the photo posts from one Mastodon list, letting
 ## Getting started
 
 1. Open the app at its hosted URL (e.g. `https://<username>.github.io/<repo>/`).
-2. Enter your instance domain (e.g. `mastodon.social`) and click **Connetti**. You'll be redirected to your instance to approve access, then sent straight back.
+2. Enter your instance domain (e.g. `mastodon.uno`) and click **Connect**. You'll be redirected to your instance to approve access, then sent straight back.
 3. Choose which list to use — the app remembers it for next time.
-4. Browse, favourite, and boost the photo posts from that list. Use **Cambia lista** anytime to switch lists.
+4. Browse, favourite, and boost the photo posts from that list. Use **List Management** anytime to switch lists.
 
 ## How authentication works
 
@@ -40,7 +43,7 @@ There is no server behind this app, so no server ever stores any of your data. E
 
 - Single list at a time — not a general-purpose Mastodon client
 - No posting/composing new statuses
-- Photo filtering happens client-side after fetching a page of the timeline, so **Carica altri** may need a few clicks on quiet lists
+- Photo filtering happens client-side after fetching a page of the timeline, so **Load more** may need a few clicks on quiet lists
 
 ## License
 
