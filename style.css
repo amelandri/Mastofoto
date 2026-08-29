@@ -79,26 +79,6 @@ body {
   margin-right: 6px;
 }
 
-@media (max-width: 480px) {
-  #session-info button {
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  #session-info .btn-icon {
-    margin-right: 0;
-  }
-
-  #session-info .btn-label {
-    display: none;
-  }
-}
-
 .hidden {
   display: none !important;
 }
@@ -271,13 +251,9 @@ a.member-name:hover {
   background: #fff;
   border-radius: 8px;
   padding: 16px;
-  margin-bottom: 50px;
+  margin-bottom: 40px;
   border-left: 3px solid transparent;
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-}
-
-.status-card.is-new {
-
 }
 
 .new-badge {
@@ -457,4 +433,49 @@ a.username:hover {
 #load-more-btn {
   display: block;
   margin: 10px auto;
+}
+
+
+@media (max-width: 480px) {
+
+  #app-header {
+    padding: 10px 10px 0 10px;
+  }
+
+  #app{
+    padding: 10px;
+  }
+
+  #session-info button {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #session-info .btn-icon {
+    margin-right: 0;
+  }
+
+  #session-info .btn-label {
+    display: none;
+  }
+
+  .status-card {
+    margin-bottom: 20px;
+  }
+
+  .status-header {
+    flex-wrap: wrap;
+  }
+
+  .status-date {
+    flex-basis: 100%;
+    margin-top: -8px;
+    margin-left: 50px;
+  }
+
 }

@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-08-28
+
+Several mobile-experience improvements, refining the responsive work started in 0.3.2.
+
+### Changed
+
+- On narrow (mobile) viewports, the post timestamp now wraps onto its own line below the author's name/username instead of sharing the top row, indented to align under the author info.
+- Reduced header and content padding on narrow viewports, and tightened the spacing between post cards, so more of the feed fits on a phone screen.
+- All mobile-specific styling was consolidated into a single `@media (max-width: 480px)` block at the end of `style.css`, instead of being spread across the file.
+
 ## [0.3.2] - 2026-08-28
 
 ### Added
