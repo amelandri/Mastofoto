@@ -202,6 +202,12 @@ button:hover {
   line-height: 1.4;
 }
 
+.copyright {
+  margin-top: 16px;
+  color: #999;
+  font-size: 0.8rem;
+}
+
 #list-members-heading {
   margin: 20px 0 8px;
 }
