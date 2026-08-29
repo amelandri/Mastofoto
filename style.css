@@ -105,6 +105,10 @@ body {
   color: #333;
 }
 
+.intro a {
+  color: #2b90d9;
+}
+
 .section-header {
   display: flex;
   align-items: baseline;
