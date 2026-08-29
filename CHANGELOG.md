@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security
+
+- The avatar and display-name links on each post (added after 0.3's profile-link feature) only HTML-escaped `account.url`, unlike the existing `@username` link — a remote account could set a `javascript:` URI as its profile URL and get it executed when a viewer clicked the avatar or name. All three profile links now share one `isHttpUrl()` scheme check.
+
 ## [0.4.0] - 2026-08-29
 
 ### Added
