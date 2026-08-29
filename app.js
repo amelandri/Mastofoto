@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = '0.3.3';
+  const APP_VERSION = '0.4.0';
   const REDIRECT_URI = window.location.origin + window.location.pathname;
   const SCOPES = 'read write:favourites write:statuses';
   const APP_NAME = 'Mastofoto';
@@ -196,6 +196,8 @@
     infoBtn: document.getElementById('info-btn'),
     infoView: document.getElementById('info-view'),
     appVersion: document.getElementById('app-version'),
+    pullRefresh: document.getElementById('pull-refresh'),
+    pullRefreshLabel: document.getElementById('pull-refresh-label'),
   };
 
   el.appVersion.textContent = APP_VERSION;
@@ -216,6 +218,67 @@
   el.lightbox.addEventListener('click', closeLightbox);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeLightbox();
+  });
+
+  // ---------- pull to refresh ----------
+
+  const PULL_THRESHOLD = 70;
+  const PULL_MAX = 100;
+  let pullStartY = null;
+  let pulling = false;
+  let refreshing = false;
+
+  function setPullHeight(px) {
+    el.pullRefresh.style.height = `${px}px`;
+  }
+
+  document.addEventListener('touchstart', (e) => {
+    if (refreshing || el.timelineView.classList.contains('hidden')) return;
+    if (window.scrollY > 0) return;
+    pullStartY = e.touches[0].clientY;
+    pulling = true;
+    el.pullRefresh.classList.add('pulling');
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!pulling || pullStartY === null) return;
+    const delta = e.touches[0].clientY - pullStartY;
+    if (delta <= 0 || window.scrollY > 0) {
+      pulling = false;
+      setPullHeight(0);
+      el.pullRefresh.classList.remove('pulling', 'ready');
+      return;
+    }
+    e.preventDefault();
+    const height = Math.min(delta * 0.5, PULL_MAX);
+    setPullHeight(height);
+    el.pullRefresh.classList.toggle('ready', height >= PULL_THRESHOLD);
+    el.pullRefreshLabel.textContent = height >= PULL_THRESHOLD ? 'Release to refresh' : 'Pull to refresh';
+  }, { passive: false });
+
+  document.addEventListener('touchend', async () => {
+    if (!pulling) return;
+    const height = parseFloat(el.pullRefresh.style.height) || 0;
+    pulling = false;
+    pullStartY = null;
+    el.pullRefresh.classList.remove('pulling');
+
+    if (height >= PULL_THRESHOLD) {
+      refreshing = true;
+      el.pullRefreshLabel.textContent = 'Refreshing…';
+      setPullHeight(50);
+      try {
+        await loadTimeline(false);
+      } finally {
+        setPullHeight(0);
+        el.pullRefresh.classList.remove('ready');
+        el.pullRefreshLabel.textContent = 'Pull to refresh';
+        refreshing = false;
+      }
+    } else {
+      setPullHeight(0);
+      el.pullRefresh.classList.remove('ready');
+    }
   });
 
   // ---------- info page ----------

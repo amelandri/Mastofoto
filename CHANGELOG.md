@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-29
+
+### Added
+
+- Pull-to-refresh on the timeline: dragging down from the top of the feed reloads the current list. Implemented natively (touch events + CSS, no library), since standalone/home-screen mode on iOS and Android has no built-in reload gesture the way a regular browser tab does.
+
+### Fixed
+
+- On mobile, every post's wrapped timestamp used `flex-basis: 100%` together with `margin-left: 50px` to indent it under the author info — the margin added on top of the already-100%-wide box pushed each post 50px past the edge of the screen, forcing the whole page to scroll horizontally. Switched to `padding-left` (included in the width under `box-sizing: border-box`) so the indent no longer adds extra width.
+
 ## [0.3.3] - 2026-08-28
 
 Several mobile-experience improvements, refining the responsive work started in 0.3.2.
