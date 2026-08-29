@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https:; media-src https:; connect-src https:; base-uri 'self'; object-src 'none'; form-action 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https: data:; media-src https:; connect-src https:; base-uri 'self'; object-src 'none'; form-action 'none';">
 <title>Mastofoto</title>
 <link rel="icon" href="assets/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="assets/favicon.png">
@@ -21,8 +21,8 @@
       <span id="current-instance" class="instance-label"></span>
     </div>
     <div id="session-info" class="hidden">
-      <button id="change-list-btn" title="List Management"><span class="btn-icon">📋</span><span class="btn-label">List Management</span></button>
-      <button id="logout-btn" title="Log out"><span class="btn-icon">🚪</span><span class="btn-label">Log out</span></button>
+      <button id="change-list-btn" aria-label="List Management" title="List Management"><span class="btn-icon">📋</span><span class="btn-label">List Management</span></button>
+      <button id="logout-btn" aria-label="Log out" title="Log out"><span class="btn-icon">🚪</span><span class="btn-label">Log out</span></button>
       <button id="info-btn" class="icon-btn" aria-label="About Mastofoto" title="About Mastofoto">i</button>
     </div>
   </div>

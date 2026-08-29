@@ -501,6 +501,98 @@
     });
   }
 
+  // ---------- blurhash ----------
+  // Reimplementation of the public blurhash decode algorithm (https://blurha.sh) —
+  // no external library, to keep the app free of runtime dependencies.
+
+  const BLURHASH_DIGITS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~';
+
+  function decode83(str) {
+    let value = 0;
+    for (let i = 0; i < str.length; i++) {
+      value = value * 83 + BLURHASH_DIGITS.indexOf(str[i]);
+    }
+    return value;
+  }
+
+  function sRGBToLinear(value) {
+    const v = value / 255;
+    return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  }
+
+  function linearToSRGB(value) {
+    const v = Math.max(0, Math.min(1, value));
+    return v <= 0.0031308
+      ? Math.round(v * 12.92 * 255)
+      : Math.round((1.055 * Math.pow(v, 1 / 2.4) - 0.055) * 255);
+  }
+
+  function signPow(value, exp) {
+    return Math.sign(value) * Math.pow(Math.abs(value), exp);
+  }
+
+  function decodeBlurhash(hash, width, height) {
+    const sizeFlag = decode83(hash[0]);
+    const numX = (sizeFlag % 9) + 1;
+    const numY = Math.floor(sizeFlag / 9) + 1;
+
+    const maxValue = (decode83(hash[1]) + 1) / 166;
+
+    const colors = [];
+    for (let i = 0; i < numX * numY; i++) {
+      if (i === 0) {
+        const value = decode83(hash.substring(2, 6));
+        colors.push([sRGBToLinear(value >> 16), sRGBToLinear((value >> 8) & 255), sRGBToLinear(value & 255)]);
+      } else {
+        const value = decode83(hash.substring(4 + i * 2, 6 + i * 2));
+        colors.push([
+          signPow((Math.floor(value / (19 * 19)) - 9) / 9, 2) * maxValue,
+          signPow((Math.floor(value / 19) % 19 - 9) / 9, 2) * maxValue,
+          signPow((value % 19 - 9) / 9, 2) * maxValue,
+        ]);
+      }
+    }
+
+    const bytesPerRow = width * 4;
+    const pixels = new Uint8ClampedArray(bytesPerRow * height);
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        let r = 0, g = 0, b = 0;
+        for (let j = 0; j < numY; j++) {
+          for (let i = 0; i < numX; i++) {
+            const basis = Math.cos((Math.PI * x * i) / width) * Math.cos((Math.PI * y * j) / height);
+            const color = colors[i + j * numX];
+            r += color[0] * basis;
+            g += color[1] * basis;
+            b += color[2] * basis;
+          }
+        }
+        const pixelIndex = 4 * x + y * bytesPerRow;
+        pixels[pixelIndex] = linearToSRGB(r);
+        pixels[pixelIndex + 1] = linearToSRGB(g);
+        pixels[pixelIndex + 2] = linearToSRGB(b);
+        pixels[pixelIndex + 3] = 255;
+      }
+    }
+    return pixels;
+  }
+
+  function blurhashToDataUrl(hash) {
+    try {
+      const size = 32;
+      const pixels = decodeBlurhash(hash, size, size);
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.putImageData(new ImageData(pixels, size, size), 0, 0);
+      return canvas.toDataURL();
+    } catch {
+      return null;
+    }
+  }
+
   function buildMediaElement(original) {
     if (!original.media_attachments || !original.media_attachments.length) return null;
     const media = document.createElement('div');
@@ -509,6 +601,18 @@
       if (att.type === 'image') {
         const img = document.createElement('img');
         const fullSrc = att.url || att.preview_url;
+        const dimensions = att.meta?.original || att.meta?.small;
+        if (dimensions?.width && dimensions?.height) {
+          img.width = dimensions.width;
+          img.height = dimensions.height;
+        }
+        if (att.blurhash) {
+          const placeholder = blurhashToDataUrl(att.blurhash);
+          if (placeholder) {
+            img.style.backgroundImage = `url(${placeholder})`;
+            img.addEventListener('load', () => { img.style.backgroundImage = ''; }, { once: true });
+          }
+        }
         img.src = fullSrc;
         img.alt = att.description || '';
         img.loading = 'lazy';
@@ -688,4 +792,10 @@
       }
     }
   })();
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
 })();

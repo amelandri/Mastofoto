@@ -400,6 +400,9 @@ a.username:hover {
 
 .status-media img {
   cursor: zoom-in;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
 }
 
 #lightbox {
