@@ -539,17 +539,21 @@
       card.appendChild(banner);
     }
 
+    const profileUrl = original.account.url;
+    const profileIsSafe = !!(profileUrl && isHttpUrl(profileUrl));
+    const displayName = escapeHtml(original.account.display_name || original.account.username);
+    const avatarImg = `<img src="${escapeAttr(original.account.avatar)}" alt="">`;
+
     const header = document.createElement('div');
     header.className = 'status-header';
     header.innerHTML = `
-      <a href="${escapeAttr(original.account.url)}" target="_blank" rel="noopener noreferrer"><img src="${escapeAttr(original.account.avatar)}" alt=""></a>
+      ${profileIsSafe ? `<a href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">${avatarImg}</a>` : avatarImg}
       <div class="status-author">
-        <div class="display-name"><a href="${escapeAttr(original.account.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(original.account.display_name || original.account.username)}</a></div>
-        ${original.account.url && isHttpUrl(original.account.url)
-          ? `<a class="username" href="${escapeAttr(original.account.url)}" target="_blank" rel="noopener noreferrer">@${escapeHtml(original.account.acct)}</a>`
+        <div class="display-name">${profileIsSafe ? `<a href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">${displayName}</a>` : displayName}</div>
+        ${profileIsSafe
+          ? `<a class="username" href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">@${escapeHtml(original.account.acct)}</a>`
           : `<div class="username">@${escapeHtml(original.account.acct)}</div>`}
       </div>
-      
       <div class="status-date">${isNew ? '<span class="new-badge">New</span>' : ''} ${escapeHtml(formatStatusDate(original.created_at))}</div>
     `;
     card.appendChild(header);
