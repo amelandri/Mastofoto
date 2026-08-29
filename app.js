@@ -1,3 +1,5 @@
+import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
+
 (() => {
   'use strict';
 
@@ -80,34 +82,9 @@
     return res;
   }
 
-  function parseNextMaxId(linkHeader, statuses) {
-    if (linkHeader) {
-      const match = linkHeader.split(',').find(part => part.includes('rel="next"'));
-      if (match) {
-        const urlMatch = match.match(/<([^>]+)>/);
-        if (urlMatch) {
-          const url = new URL(urlMatch[1]);
-          const maxId = url.searchParams.get('max_id');
-          if (maxId) return maxId;
-        }
-      }
-    }
-    if (statuses.length) return statuses[statuses.length - 1].id;
-    return null;
-  }
-
   // ---------- sanitizer ----------
 
   const ALLOWED_TAGS = new Set(['A', 'P', 'BR', 'SPAN', 'STRONG', 'B', 'EM', 'I', 'DEL', 'CODE', 'PRE', 'UL', 'OL', 'LI', 'BLOCKQUOTE']);
-
-  function isHttpUrl(value) {
-    try {
-      const url = new URL(value, window.location.href);
-      return url.protocol === 'http:' || url.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  }
 
   function sanitizeStatusHtml(html) {
     const doc = new DOMParser().parseFromString(html || '', 'text/html');
@@ -164,10 +141,6 @@
     });
   }
 
-  function hasPhoto(status) {
-    const original = status.reblog || status;
-    return (original.media_attachments || []).some(att => att.type === 'image');
-  }
 
   // ---------- DOM refs ----------
 

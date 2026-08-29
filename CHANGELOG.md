@@ -14,6 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - Added explicit `aria-label`s to the "List Management" and "Log out" header buttons, matching the existing info button, so screen readers announce them correctly once their text labels collapse to icon-only on mobile.
+- `isHttpUrl`, `hasPhoto`, and `parseNextMaxId` moved out of `app.js` into a new `pure.mjs` module, with `app.js` now loaded as `<script type="module">` importing them. A minimal `package.json` (`"type": "module"`, no dependencies) was added so Node resolves the same `import` for testing.
+
+### Added (dev tooling)
+
+- A test suite (`pure.test.mjs`, run with `node --test` / `npm test`) covering `pure.mjs`'s functions, including a regression test for the `javascript:` URI issue fixed in 0.4.1.
 
 ## [0.4.1] - 2026-08-29
 
