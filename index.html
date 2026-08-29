@@ -7,6 +7,9 @@
 <title>Mastofoto</title>
 <link rel="icon" href="assets/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2b90d9">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,8 +21,8 @@
       <span id="current-instance" class="instance-label"></span>
     </div>
     <div id="session-info" class="hidden">
-      <button id="change-list-btn">List Management</button>
-      <button id="logout-btn">Log out</button>
+      <button id="change-list-btn" title="List Management"><span class="btn-icon">📋</span><span class="btn-label">List Management</span></button>
+      <button id="logout-btn" title="Log out"><span class="btn-icon">🚪</span><span class="btn-label">Log out</span></button>
       <button id="info-btn" class="icon-btn" aria-label="About Mastofoto" title="About Mastofoto">i</button>
     </div>
   </div>
@@ -29,7 +32,8 @@
 
   <section id="login-view">
     <div class="card">
-      <p class="intro">Turn one Mastodon list into a beautiful, distraction-free photo feed. Connect your account, pick a list, and only the photos show up — ready to favourite or boost without ever leaving the feed.</p>
+      <p class="intro"><strong>Transform a Mastodon list, in a beatiful clean photo feed!</strong><br /><br />Mastofoto shows you the posts from one of your Mastodon lists, but only the ones that include a photo: every text-only post is filtered out.
+      <br /><br />Connect your account, pick a list, and favourite or boost photos right from the feed.</p>
 
       <h2>Connect your Mastodon instance</h2>
       <label for="instance-input">Instance domain (e.g. mastodon.uno)</label>
@@ -38,13 +42,20 @@
         <button id="connect-btn">Connect</button>
       </div>
       <p id="login-error" class="error hidden"></p>
-      <p class="privacy-note">🔒 
-      Mastofoto is a static, single-user web app that lets you log into a Mastodon instance, pick one Mastodon list, and view only the posts in that list that contain photos (image attachments), with the ability to favourite and reblog them.
-      <br /><br />
-      No information is stored on any server: this app talks directly to your Mastodon instance, and your access token stays only in your browser's storage.
-      <br /><br />
-      It runs entirely client-side against the Mastodon REST API — there is no backend, no build step, and no database. All persisted state lives in the browser's `localStorage`. 
-      The page has no external dependencies besides the Mastodon instance itself.</p>
+      <div class="privacy-note">
+      Some info about Mastofoto:
+      <ul>
+        <li>There is no server: Mastofoto is a static page that talks directly to your Mastodon instance from your browser. Nothing you do here is seen or stored by anyone else.</li>
+        <li>Your login credentials and access token are stored only in this browser's local storage, kept separate per Mastodon instance, and are cleared when you log out. Your chosen list is remembered even after logging out, ready again next time you sign back in.</li>
+        <li>Login uses Mastodon's standard OAuth flow with a random, one-time <code>state</code> value checked on return, so a login started here can't be hijacked or completed with someone else's authorization.</li>
+        <li>The app only ever requests permission to read your timeline and to favourite/reblog — it can never post, delete, or follow on your behalf.</li>
+        <li>Post content is run through an allowlist filter before being displayed, and only <code>http(s)</code> links are ever made clickable.</li>
+        <li>The page is served over HTTPS and sets a Content-Security-Policy restricting where scripts and styles may load from.</li>
+        <li>Because there's no backend, the app's own OAuth client credentials are visible in your browser — normal for a purely client-side app like this one, and not something that exposes your account or password.</li>
+        <li>Mastofoto is open source, released under the MIT license. <a href="https://github.com/amelandri/Mastofoto" target="_blank" rel="noopener noreferrer">View the source on GitHub →</a></li>
+      </ul>
+
+      </div>
     </div>
   </section>
 
@@ -80,7 +91,7 @@
         <a href="." class="home-link">← Home Page</a>
       </div>
       <p class="version-tag">Version <span id="app-version"></span></p>
-      <p>Mastofoto turns one Mastodon list into a clean, distraction-free photo feed. <br />Connect your account, pick a list, and only the photos show up, ready to favourite or boost.</p>
+      <p>Mastofoto shows you the posts from one of your Mastodon lists, but only the ones that include a photo — every text-only post is filtered out. Connect your account, pick a list, and favourite or boost photos right from the feed.</p>
 
       <h3>Features</h3>
       <ul>

@@ -1,0 +1,16 @@
+{
+  "name": "Mastofoto",
+  "short_name": "Mastofoto",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f2f3f5",
+  "theme_color": "#2b90d9",
+  "icons": [
+    {
+      "src": "assets/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

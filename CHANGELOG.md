@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-08-28
+
+### Added
+
+- A web app manifest (`manifest.json`) plus `apple-touch-icon`/`theme-color` tags, so the existing favicon PNG is used as the home-screen icon when the app is installed/added to the home screen on mobile.
+
+### Changed
+
+- On narrow (mobile) viewports, the "List Management" and "Log out" buttons collapse to icon-only circular buttons (matching the existing info button style), hiding their text labels to save header space.
+- Reworded the login and About page descriptions to make explicit that Mastofoto shows the posts of a Mastodon **list** and filters out anything that isn't a **photo** post — user feedback showed the previous, more abstract wording ("distraction-free photo feed") didn't convey either point clearly.
+- The login page's privacy note is now the same bulleted "Security & data" list shown on the About page (including the open-source/GitHub mention), instead of a shorter standalone paragraph.
+
+### Fixed
+
+- On narrow screens, a long display name or username in a post header could force the row wider than the card, pushing the timestamp outside the post box. The author block now shrinks and truncates with an ellipsis instead, keeping the date always visible.
+
 ## [0.3.1] - 2026-08-28
 
 ### Added
