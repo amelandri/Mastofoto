@@ -718,15 +718,13 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     actions.className = 'status-actions';
 
     const favBtn = document.createElement('button');
-    favBtn.setAttribute('aria-label', 'Favourite');
-    favBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${FAV_ICON_SVG}</span><span class="btn-count">${original.favourites_count}</span>`;
+    favBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${FAV_ICON_SVG}</span><span class="sr-only">Favourite,</span> <span class="btn-count">${original.favourites_count}</span>`;
     if (original.favourited) favBtn.classList.add('active');
     favBtn.addEventListener('click', () => toggleFavourite(original.id, favBtn));
     actions.appendChild(favBtn);
 
     const boostBtn = document.createElement('button');
-    boostBtn.setAttribute('aria-label', 'Reblog');
-    boostBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span><span class="btn-count">${original.reblogs_count}</span>`;
+    boostBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span><span class="sr-only">Reblog,</span> <span class="btn-count">${original.reblogs_count}</span>`;
     if (original.reblogged) boostBtn.classList.add('active');
     if (original.visibility === 'private' || original.visibility === 'direct') {
       boostBtn.disabled = true;
