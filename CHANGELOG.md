@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Renamed the login page's `.privacy-note` div to `.app-disclosure` — the old name matched generic cosmetic-filtering rules used by some content/ad blockers (notably on iOS Safari), which hid the whole section even though it's not a cookie/tracking notice at all.
+
 ### Added
 
 - Dark theme (background `#191d20`), switchable from a new "Theme" setting on the renamed Settings screen. Defaults to the OS/browser's `prefers-color-scheme` when no explicit choice has been saved; the pick persists in `localStorage` and applies instantly, including updating the mobile/PWA `theme-color`.
