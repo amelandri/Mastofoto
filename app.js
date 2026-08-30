@@ -189,6 +189,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     appVersion: document.getElementById('app-version'),
     pullRefresh: document.getElementById('pull-refresh'),
     pullRefreshLabel: document.getElementById('pull-refresh-label'),
+    lightboxClose: document.getElementById('lightbox-close'),
   };
 
   el.appVersion.textContent = APP_VERSION;
@@ -202,18 +203,25 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
 
   // ---------- lightbox ----------
 
-  function openLightbox(src, alt) {
+  let lightboxTrigger = null;
+
+  function openLightbox(src, alt, triggerEl) {
     el.lightboxImg.src = src;
-    el.lightboxImg.alt = alt || '';
+    el.lightboxImg.alt = alt || 'Photo without a description';
+    lightboxTrigger = triggerEl || document.activeElement;
     show(el.lightbox);
+    el.lightboxClose.focus();
   }
 
   function closeLightbox() {
     hide(el.lightbox);
     el.lightboxImg.src = '';
+    if (lightboxTrigger) lightboxTrigger.focus();
+    lightboxTrigger = null;
   }
 
   el.lightbox.addEventListener('click', closeLightbox);
+  el.lightboxClose.addEventListener('click', closeLightbox);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeLightbox();
   });
@@ -612,9 +620,18 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
           }
         }
         img.src = fullSrc;
-        img.alt = att.description || '';
+        img.alt = att.description || 'Photo without a description';
         img.loading = 'lazy';
-        img.addEventListener('click', () => openLightbox(fullSrc, att.description));
+        img.tabIndex = 0;
+        img.setAttribute('role', 'button');
+        img.setAttribute('aria-label', att.description ? `View photo: ${att.description}` : 'View photo full size');
+        img.addEventListener('click', () => openLightbox(fullSrc, att.description, img));
+        img.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openLightbox(fullSrc, att.description, img);
+          }
+        });
         media.appendChild(img);
       } else if (att.type === 'video' || att.type === 'gifv') {
         const video = document.createElement('video');

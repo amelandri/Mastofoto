@@ -9,6 +9,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - Dark theme (background `#191d20`), switchable from a new "Theme" setting on the renamed Settings screen. Defaults to the OS/browser's `prefers-color-scheme` when no explicit choice has been saved; the pick persists in `localStorage` and applies instantly, including updating the mobile/PWA `theme-color`.
+- A visible close button on the photo lightbox, and full keyboard support: photos are focusable and open with Enter/Space (previously mouse/touch only), and closing the lightbox returns focus to the photo that opened it.
+
+### Accessibility
+
+- Found and fixed several real WCAG contrast failures (measured, not eyeballed): `--text-tertiary` (2.85:1 in light mode), `--border-strong` on inputs/buttons (1.55:1), and white text on `--accent-active` (2.27:1) all fell short of the required 4.5:1 (text) / 3:1 (UI components) — all three now pass in both themes.
+- Added a visually-hidden `<h1>Mastofoto</h1>` in the header, giving every view a proper heading hierarchy starting from one `<h1>` (previously the page had none — headings jumped straight to `<h2>`).
+- `#list-select` had no accessible name at all (the "List" heading nearby isn't programmatically associated with it) — added a visually-hidden `<label>`.
+- Photo images lacking an author-provided description now get a fallback `alt` ("Photo without a description") instead of an empty one, so screen readers announce that a photo exists rather than skipping it entirely.
+- Error/status messages (`#login-error`, `#list-setup-error`, `#timeline-error`, `#no-list-message`) now use `role="alert"`/`aria-live="polite"` so they're announced automatically instead of requiring the user to find them manually.
+- The lightbox now has `role="dialog"`/`aria-modal="true"`, and moves focus to its close button on open and back to the triggering photo on close.
 
 ### Changed
 

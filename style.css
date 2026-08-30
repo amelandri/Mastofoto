@@ -6,15 +6,15 @@
   --surface: #fff;
   --text: #1c1e21;
   --text-secondary: #666;
-  --text-tertiary: #999;
+  --text-tertiary: #6e6e6e;
   --border: #eee;
-  --border-strong: #ccd0d5;
+  --border-strong: #8a9099;
   --btn-secondary-bg: #eef1f4;
   --btn-secondary-bg-hover: #dde1e4;
   --btn-icon-bg: #d0cfcf;
   --error: #d13c3c;
   --accent: #2b90d9;
-  --accent-active: #74b3e0;
+  --accent-active: #1c69a0;
   --accent-contrast: #fff;
   --shadow: rgba(0, 0, 0, 0.1);
   --overlay-bg: rgba(0, 0, 0, 0.9);
@@ -26,9 +26,9 @@
   --surface: #22262b;
   --text: #e8eaed;
   --text-secondary: #9aa0a6;
-  --text-tertiary: #75797d;
+  --text-tertiary: #8b8f93;
   --border: #2e3338;
-  --border-strong: #3a3f44;
+  --border-strong: #6b7178;
   --btn-secondary-bg: #2a2f34;
   --btn-secondary-bg-hover: #363c42;
   --btn-icon-bg: #3a3f44;
@@ -89,7 +89,7 @@ body {
   background: var(--btn-secondary-bg);
   color: var(--text);
   border: 1px solid var(--border-strong);
-  opacity: 0.6;
+  opacity: 0.65;
 }
 
 #session-info button:hover {
@@ -122,6 +122,18 @@ body {
 
 .hidden {
   display: none !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 #app {
@@ -484,6 +496,30 @@ a.username:hover {
   max-height: 100%;
   object-fit: contain;
   border-radius: 4px;
+}
+
+#lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+#lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.status-media img:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 #info-view h3 {

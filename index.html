@@ -17,6 +17,7 @@
 <header id="app-header">
   <div class="header-inner">
     <div class="brand">
+        <h1 class="sr-only">Mastofoto</h1>
         <img src="assets/logo.png" alt="Mastofoto" class="logo">
       <span id="current-instance" class="instance-label"></span>
     </div>
@@ -42,7 +43,7 @@
         <input type="text" id="instance-input" placeholder="mastodon.uno">
         <button id="connect-btn">Connect</button>
       </div>
-      <p id="login-error" class="error hidden"></p>
+      <p id="login-error" class="error hidden" role="alert"></p>
       <div class="privacy-note">
       Some info about Mastofoto:
       <ul>
@@ -79,12 +80,13 @@
 
       <div class="settings-section">
         <h3>List</h3>
+        <label for="list-select" class="sr-only">List</label>
         <div class="form-row">
           <select id="list-select"></select>
           <button id="use-list-btn">Use this list</button>
         </div>
-        <p id="list-setup-error" class="error hidden"></p>
-        <p id="no-list-message" class="hint hidden">No lists found. Create a list on Mastodon and add the accounts you want to follow to it.</p>
+        <p id="list-setup-error" class="error hidden" role="alert"></p>
+        <p id="no-list-message" class="hint hidden" aria-live="polite">No lists found. Create a list on Mastodon and add the accounts you want to follow to it.</p>
         <h4 id="list-members-heading" class="hint hidden">Members</h4>
         <ul id="list-members"></ul>
       </div>
@@ -99,7 +101,7 @@
       <span id="pull-refresh-label">Pull to refresh</span>
     </div>
     <div id="timeline-container">
-      <p id="timeline-error" class="error hidden"></p>
+      <p id="timeline-error" class="error hidden" role="alert"></p>
       <div id="statuses"></div>
       <button id="load-more-btn" class="hidden">Load more</button>
     </div>
@@ -142,7 +144,8 @@
 
 </main>
 
-<div id="lightbox" class="hidden">
+<div id="lightbox" class="hidden" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <button id="lightbox-close" aria-label="Close">×</button>
   <img id="lightbox-img" src="" alt="">
 </div>
 
