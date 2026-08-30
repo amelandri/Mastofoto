@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- The header's "Settings", "Log out", and info buttons no longer look like buttons (no background/border) — restyled as colored text links with an underline on hover, using the same `--link` blue as other links. They're still real `<button>` elements under the hood (kept for native keyboard support), just visually plain-link. The link color's contrast was checked without the previous opacity dimming, since that alone was enough to drop it back under 4.5:1 in light mode.
+
 ### Fixed
 
 - Renamed the login page's `.privacy-note` div to `.app-disclosure` — the old name matched generic cosmetic-filtering rules used by some content/ad blockers (notably on iOS Safari), which hid the whole section even though it's not a cookie/tracking notice at all.
@@ -14,6 +18,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Dark theme (background `#191d20`), switchable from a new "Theme" setting on the renamed Settings screen. Defaults to the OS/browser's `prefers-color-scheme` when no explicit choice has been saved; the pick persists in `localStorage` and applies instantly, including updating the mobile/PWA `theme-color`.
 - A visible close button on the photo lightbox, and full keyboard support: photos are focusable and open with Enter/Space (previously mouse/touch only), and closing the lightbox returns focus to the photo that opened it.
+- A service worker (`sw.js`) caches the static app shell (HTML/CSS/JS/manifest/icons) so the app still loads when offline or on a flaky connection — network-first with cache fallback, and scoped to same-origin requests only, so it never touches Mastodon API responses.
+- Photos now show a blurred placeholder (decoded from Mastodon's `blurhash` data, no library) while the full-resolution image loads, instead of empty space.
+- A test suite (`pure.test.mjs`, run with `node --test` / `npm test`) covering `pure.mjs`'s functions, including a regression test for the `javascript:` URI issue fixed in 0.4.1.
+
+### Changed
+
+- Renamed "List Management" to "Settings", reorganizing the screen into a "List" section (unchanged content) and a new "Appearance" section (the theme picker).
+- Every remaining color in `style.css` (brand blue, button text, card shadows, the lightbox overlay) moved into the light/dark CSS variables, so none are hardcoded outside the two `:root` palette blocks.
+- Redesigned the "New" badge and timestamp on desktop: instead of sharing one line pushed to the right, they now stack in a right-aligned column, with the badge vertically lined up with the author's name and the date with their handle.
+- On mobile, the "New" badge no longer sits inline with the wrapped date — it's now pinned to the top-right corner of the post card, while the date stays under the author info as before.
+- Added explicit `aria-label`s to the "List Management" and "Log out" header buttons, matching the existing info button, so screen readers announce them correctly once their text labels collapse to icon-only on mobile.
+- `isHttpUrl`, `hasPhoto`, and `parseNextMaxId` moved out of `app.js` into a new `pure.mjs` module, with `app.js` now loaded as `<script type="module">` importing them. A minimal `package.json` (`"type": "module"`, no dependencies) was added so Node resolves the same `import` for testing.
 
 ### Accessibility
 
@@ -25,26 +41,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The lightbox now has `role="dialog"`/`aria-modal="true"`, and moves focus to its close button on open and back to the triggering photo on close.
 - Split the brand blue from an accessible one: `#2b90d9` measured only ~3.45:1 as text/button-label color, so it's now reserved for non-text branding (the logo/favicon/`theme-color`) only. Links use a new `--link` token (`#1a6699` light / `#5aa9e6` dark — brighter in dark mode since a link's background is the page surface, which changes per theme), and solid buttons/the "New" badge/the active favourite-reblog state use `--btn-primary-bg` (`#1c69a0`, same in both themes since a button's own fill is its immediate background regardless of page theme). Both pass 4.5:1+ with their paired text color.
 
-### Changed
-
-- Renamed "List Management" to "Settings", reorganizing the screen into a "List" section (unchanged content) and a new "Appearance" section (the theme picker).
-- Every remaining color in `style.css` (brand blue, button text, card shadows, the lightbox overlay) moved into the light/dark CSS variables, so none are hardcoded outside the two `:root` palette blocks.
-- Redesigned the "New" badge and timestamp on desktop: instead of sharing one line pushed to the right, they now stack in a right-aligned column, with the badge vertically lined up with the author's name and the date with their handle.
-- On mobile, the "New" badge no longer sits inline with the wrapped date — it's now pinned to the top-right corner of the post card, while the date stays under the author info as before.
-
-### Added
-
-- A service worker (`sw.js`) caches the static app shell (HTML/CSS/JS/manifest/icons) so the app still loads when offline or on a flaky connection — network-first with cache fallback, and scoped to same-origin requests only, so it never touches Mastodon API responses.
-- Photos now show a blurred placeholder (decoded from Mastodon's `blurhash` data, no library) while the full-resolution image loads, instead of empty space.
-
-### Changed
-
-- Added explicit `aria-label`s to the "List Management" and "Log out" header buttons, matching the existing info button, so screen readers announce them correctly once their text labels collapse to icon-only on mobile.
-- `isHttpUrl`, `hasPhoto`, and `parseNextMaxId` moved out of `app.js` into a new `pure.mjs` module, with `app.js` now loaded as `<script type="module">` importing them. A minimal `package.json` (`"type": "module"`, no dependencies) was added so Node resolves the same `import` for testing.
-
-### Added (dev tooling)
-
-- A test suite (`pure.test.mjs`, run with `node --test` / `npm test`) covering `pure.mjs`'s functions, including a regression test for the `javascript:` URI issue fixed in 0.4.1.
 
 ## [0.4.1] - 2026-08-29
 

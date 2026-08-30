@@ -90,34 +90,39 @@ body {
 }
 
 #session-info button {
-  background: var(--btn-secondary-bg);
-  color: var(--text);
-  border: 1px solid var(--border-strong);
-  opacity: 0.65;
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  color: var(--link);
+  font-weight: 600;
 }
 
 #session-info button:hover {
-  background: var(--btn-secondary-bg-hover);
-  color: var(--text);
-  border: 1px solid var(--border-strong);
-  opacity: 0.8;
+  background: none;
+  border: none;
+  color: var(--link);
+  text-decoration: underline;
 }
 
 .icon-btn {
   padding: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  font-size: 0.9rem;
+  width: auto;
+  height: auto;
+  font-size: 1.1rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   border: 0 !important;
-  background: var(--btn-icon-bg) !important;
+  background: none !important;
+  color: var(--link);
   font-weight: bold;
   font-style: italic;
   font-family: Serif;
+}
+
+.icon-btn:hover {
+  text-decoration: underline;
 }
 
 .btn-icon {
@@ -591,7 +596,7 @@ a.username:hover {
     width: 28px;
     height: 28px;
     padding: 0;
-    border-radius: 50%;
+    font-size: 1.2rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
