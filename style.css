@@ -121,6 +121,25 @@ body {
   display: block;
 }
 
+.status-actions .btn-icon svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+  margin-top: -2px;
+}
+
+.status-actions .view-original-btn .btn-icon svg {
+  margin-top: 0px;
+}
+
+.reblog-banner .btn-icon svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+  stroke-width: 3;
+  color: var(--link);
+}
+
 .hidden {
   display: none !important;
 }
