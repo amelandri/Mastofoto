@@ -6,32 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-### Changed
-
-- Updated the About/Info page and README to catch up with everything shipped since they were last written: the Features list now mentions the theme picker, PWA installability, pull-to-refresh, offline app-shell caching, and jumping to the original post; Security & data now discloses the service worker's scope (app files only, never Mastodon data) and, honestly, that some deployments (including the maintainer's own) may run basic anonymous analytics — the code in this repository carries none.
-
-### Fixed
-
-- Logging out while viewing the About/Info page left it visible behind the login form, since the logout handler never hid it — every view-switching handler now goes through a single `showView()` helper that always hides all four views before showing one, so this whole class of "forgot to hide X" bug can't recur.
-
 ### Added
 
+- **Dark theme**, switchable from a new "Theme" setting on the renamed Settings screen. Defaults to the OS/browser's `prefers-color-scheme` when no explicit choice has been saved; the pick persists in `localStorage` and applies instantly, including updating the mobile/PWA `theme-color`.
 - The About/Info page is now reachable from the login screen too (previously only from the header once logged in), via a new link in the login page's short disclosure text.
 - The header's info button is now always visible, including when logged out — previously it lived inside the same container as "Settings"/"Log out" and was hidden along with them until login.
-
-### Changed
-
-- Replaced the login page's long bulleted "Some info about Mastofoto" disclosure with a short sentence and a link to the Info page for the full detail.
-
-- The header's "Settings", "Log out", and info buttons no longer look like buttons (no background/border) — restyled as colored text links with an underline on hover, using the same `--link` blue as other links. They're still real `<button>` elements under the hood (kept for native keyboard support), just visually plain-link. The link color's contrast was checked without the previous opacity dimming, since that alone was enough to drop it back under 4.5:1 in light mode.
-
-### Fixed
-
-- Renamed the login page's `.privacy-note` div to `.app-disclosure` — the old name matched generic cosmetic-filtering rules used by some content/ad blockers (notably on iOS Safari), which hid the whole section even though it's not a cookie/tracking notice at all.
-
-### Added
-
-- Dark theme (background `#191d20`), switchable from a new "Theme" setting on the renamed Settings screen. Defaults to the OS/browser's `prefers-color-scheme` when no explicit choice has been saved; the pick persists in `localStorage` and applies instantly, including updating the mobile/PWA `theme-color`.
 - A visible close button on the photo lightbox, and full keyboard support: photos are focusable and open with Enter/Space (previously mouse/touch only), and closing the lightbox returns focus to the photo that opened it.
 - A service worker (`sw.js`) caches the static app shell (HTML/CSS/JS/manifest/icons) so the app still loads when offline or on a flaky connection — network-first with cache fallback, and scoped to same-origin requests only, so it never touches Mastodon API responses.
 - Photos now show a blurred placeholder (decoded from Mastodon's `blurhash` data, no library) while the full-resolution image loads, instead of empty space.
@@ -39,12 +18,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Updated the About/Info page and README to catch up with everything shipped since they were last written: the Features list now mentions the theme picker, PWA installability, pull-to-refresh, offline app-shell caching, and jumping to the original post; Security & data now discloses the service worker's scope (app files only, never Mastodon data) and, honestly, that some deployments (including the maintainer's own) may run basic anonymous analytics — the code in this repository carries none.
+- Replaced the login page's long bulleted "Some info about Mastofoto" disclosure with a short sentence and a link to the Info page for the full detail.
+- The header's "Settings", "Log out", and info buttons no longer look like buttons (no background/border) — restyled as colored text links with an underline on hover, using the same `--link` blue as other links. They're still real `<button>` elements under the hood (kept for native keyboard support), just visually plain-link. The link color's contrast was checked without the previous opacity dimming, since that alone was enough to drop it back under 4.5:1 in light mode.
 - Renamed "List Management" to "Settings", reorganizing the screen into a "List" section (unchanged content) and a new "Appearance" section (the theme picker).
 - Every remaining color in `style.css` (brand blue, button text, card shadows, the lightbox overlay) moved into the light/dark CSS variables, so none are hardcoded outside the two `:root` palette blocks.
 - Redesigned the "New" badge and timestamp on desktop: instead of sharing one line pushed to the right, they now stack in a right-aligned column, with the badge vertically lined up with the author's name and the date with their handle.
 - On mobile, the "New" badge no longer sits inline with the wrapped date — it's now pinned to the top-right corner of the post card, while the date stays under the author info as before.
 - Added explicit `aria-label`s to the "List Management" and "Log out" header buttons, matching the existing info button, so screen readers announce them correctly once their text labels collapse to icon-only on mobile.
 - `isHttpUrl`, `hasPhoto`, and `parseNextMaxId` moved out of `app.js` into a new `pure.mjs` module, with `app.js` now loaded as `<script type="module">` importing them. A minimal `package.json` (`"type": "module"`, no dependencies) was added so Node resolves the same `import` for testing.
+
+### Fixed
+
+- Logging out while viewing the About/Info page left it visible behind the login form, since the logout handler never hid it — every view-switching handler now goes through a single `showView()` helper that always hides all four views before showing one, so this whole class of "forgot to hide X" bug can't recur.
+- Renamed the login page's `.privacy-note` div to `.app-disclosure` — the old name matched generic cosmetic-filtering rules used by some content/ad blockers (notably on iOS Safari), which hid the whole section even though it's not a cookie/tracking notice at all.
 
 ### Accessibility
 
