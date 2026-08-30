@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - The About/Info page is now reachable from the login screen too (previously only from the header once logged in), via a new link in the login page's short disclosure text.
+- The header's info button is now always visible, including when logged out — previously it lived inside the same container as "Settings"/"Log out" and was hidden along with them until login.
 
 ### Changed
 

@@ -167,7 +167,6 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     loginError: document.getElementById('login-error'),
     loginView: document.getElementById('login-view'),
     timelineView: document.getElementById('timeline-view'),
-    sessionInfo: document.getElementById('session-info'),
     currentInstance: document.getElementById('current-instance'),
     logoutBtn: document.getElementById('logout-btn'),
     changeListBtn: document.getElementById('change-list-btn'),
@@ -361,7 +360,8 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     state.instance = null;
     state.token = null;
     state.currentListId = null;
-    hide(el.sessionInfo);
+    hide(el.changeListBtn);
+    hide(el.logoutBtn);
     showView(el.loginView);
     el.instanceInput.value = '';
     el.currentInstance.textContent = '';
@@ -418,7 +418,8 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     state.token = token;
     localStorage.setItem('mastofoto:lastInstance', instance);
 
-    show(el.sessionInfo);
+    show(el.changeListBtn);
+    show(el.logoutBtn);
     el.currentInstance.textContent = instance;
 
     const configuredListId = getInstanceData(instance, 'listId');
