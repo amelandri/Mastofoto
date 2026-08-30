@@ -16,6 +16,8 @@
   --btn-primary-bg: #1c69a0;
   --accent-contrast: #fff;
   --link: #1a6699;
+  --link-header: #666666;
+  --link-header-hover: rgba(255, 255, 255, 0.3);
   --shadow: rgba(0, 0, 0, 0.1);
   --overlay-bg: rgba(0, 0, 0, 0.9);
   --lightbox-btn-bg: rgba(255, 255, 255, 0.15);
@@ -38,6 +40,8 @@
   --btn-primary-bg: #1c69a0;
   --accent-contrast: #fff;
   --link: #5aa9e6;
+  --link-header: #5aa9e6;
+  --link-header-hover: #1c69a0;
   --shadow: rgba(0, 0, 0, 0);
   --overlay-bg: rgba(0, 0, 0, 0.9);
   --lightbox-btn-bg: rgba(255, 255, 255, 0.15);
@@ -93,11 +97,11 @@ body {
   background: none;
   border: none;
   padding: 4px 2px;
-  color: var(--link);
+  color: var(--link-header);
   font-weight: 600;
 }
 
-#session-info button:hover {
+#session-info button .btn-label:hover {
   background: none;
   border: none;
   color: var(--link);
@@ -121,12 +125,13 @@ body {
   font-family: Serif;
 }
 
-.icon-btn:hover {
+.icon-btn{
   text-decoration: underline;
 }
 
 .btn-icon {
   margin-right: 6px;
+  opacity: 0.7;
 }
 
 .hidden {
@@ -183,15 +188,24 @@ body {
 }
 
 .home-link {
-  color: var(--text);
+  color: var(--link);
   font-size: 0.9rem;
   white-space: nowrap;
-  opacity: 0.6;
   text-decoration: none;
 }
 
-.home-link:hover{
-  opacity: 0.8;
+.link-button {
+  display: inline;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: var(--link);
+  font: inherit;
+  cursor: pointer;
+}
+
+.link-button:hover {
   text-decoration: underline;
 }
 

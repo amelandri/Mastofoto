@@ -24,7 +24,7 @@
     <div id="session-info" class="hidden">
       <button id="change-list-btn" aria-label="Settings" title="Settings"><span class="btn-icon">⚙️</span><span class="btn-label">Settings</span></button>
       <button id="logout-btn" aria-label="Log out" title="Log out"><span class="btn-icon">🚪</span><span class="btn-label">Log out</span></button>
-      <button id="info-btn" class="icon-btn" aria-label="About Mastofoto" title="About Mastofoto">i</button>
+      <button id="info-btn" aria-label="About Mastofoto" title="About Mastofoto"><span class="btn-icon">ℹ️</span><span class="btn-label">Info</span></button>
     </div>
   </div>
 </header>
@@ -44,20 +44,7 @@
         <button id="connect-btn">Connect</button>
       </div>
       <p id="login-error" class="error hidden" role="alert"></p>
-      <div class="app-disclosure">
-      Some info about Mastofoto:
-      <ul>
-        <li>There is no server: Mastofoto is a static page that talks directly to your Mastodon instance from your browser. Nothing you do here is seen or stored by anyone else.</li>
-        <li>Your login credentials and access token are stored only in this browser's local storage, kept separate per Mastodon instance, and are cleared when you log out. Your chosen list is remembered even after logging out, ready again next time you sign back in.</li>
-        <li>Login uses Mastodon's standard OAuth flow with a random, one-time <code>state</code> value checked on return, so a login started here can't be hijacked or completed with someone else's authorization.</li>
-        <li>The app only ever requests permission to read your timeline and to favourite/reblog — it can never post, delete, or follow on your behalf.</li>
-        <li>Post content is run through an allowlist filter before being displayed, and only <code>http(s)</code> links are ever made clickable.</li>
-        <li>The page is served over HTTPS and sets a Content-Security-Policy restricting where scripts and styles may load from.</li>
-        <li>Because there's no backend, the app's own OAuth client credentials are visible in your browser — normal for a purely client-side app like this one, and not something that exposes your account or password.</li>
-        <li>Mastofoto is open source, released under the MIT license. <a href="https://github.com/amelandri/Mastofoto" target="_blank" rel="noopener noreferrer">View the source on GitHub →</a></li>
-      </ul>
-
-      </div>
+      <p class="app-disclosure">🔒 No server, no tracking: Mastofoto talks directly to your Mastodon instance from your browser, and your access token never leaves it. <button id="login-info-btn" class="link-button">See the Info page</button> for the full picture — how it works, security details, and that it's open source.</p>
       <p class="copyright">© 2026 Alessandro Melandri</p>
     </div>
   </section>

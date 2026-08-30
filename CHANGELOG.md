@@ -6,7 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Logging out while viewing the About/Info page left it visible behind the login form, since the logout handler never hid it — every view-switching handler now goes through a single `showView()` helper that always hides all four views before showing one, so this whole class of "forgot to hide X" bug can't recur.
+
+### Added
+
+- The About/Info page is now reachable from the login screen too (previously only from the header once logged in), via a new link in the login page's short disclosure text.
+
 ### Changed
+
+- Replaced the login page's long bulleted "Some info about Mastofoto" disclosure with a short sentence and a link to the Info page for the full detail.
 
 - The header's "Settings", "Log out", and info buttons no longer look like buttons (no background/border) — restyled as colored text links with an underline on hover, using the same `--link` blue as other links. They're still real `<button>` elements under the hood (kept for native keyboard support), just visually plain-link. The link color's contrast was checked without the previous opacity dimming, since that alone was enough to drop it back under 4.5:1 in light mode.
 

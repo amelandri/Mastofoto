@@ -186,11 +186,25 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     lightboxImg: document.getElementById('lightbox-img'),
     infoBtn: document.getElementById('info-btn'),
     infoView: document.getElementById('info-view'),
+    loginInfoBtn: document.getElementById('login-info-btn'),
     appVersion: document.getElementById('app-version'),
     pullRefresh: document.getElementById('pull-refresh'),
     pullRefreshLabel: document.getElementById('pull-refresh-label'),
     lightboxClose: document.getElementById('lightbox-close'),
   };
+
+  // ---------- view switching ----------
+  // Exactly one of these four <section>s is ever visible at a time; showView()
+  // is the single place that enforces that, so a handler can never forget to
+  // hide a view it's navigating away from (see CHANGELOG for the logout bug
+  // this replaced).
+
+  const VIEWS = [el.loginView, el.listSetupView, el.timelineView, el.infoView];
+
+  function showView(view) {
+    VIEWS.forEach(hide);
+    show(view);
+  }
 
   el.appVersion.textContent = APP_VERSION;
 
@@ -289,11 +303,8 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
 
   // ---------- info page ----------
 
-  el.infoBtn.addEventListener('click', () => {
-    hide(el.timelineView);
-    hide(el.listSetupView);
-    show(el.infoView);
-  });
+  el.infoBtn.addEventListener('click', () => showView(el.infoView));
+  el.loginInfoBtn.addEventListener('click', () => showView(el.infoView));
 
   // ---------- login flow ----------
 
@@ -350,16 +361,13 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     state.instance = null;
     state.token = null;
     state.currentListId = null;
-    hide(el.timelineView);
-    hide(el.listSetupView);
     hide(el.sessionInfo);
-    show(el.loginView);
+    showView(el.loginView);
     el.instanceInput.value = '';
     el.currentInstance.textContent = '';
   });
 
   el.changeListBtn.addEventListener('click', () => {
-    hide(el.timelineView);
     showListSetup(getInstanceData(state.instance, 'listId'));
   });
 
@@ -367,8 +375,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     const listId = el.listSelect.value;
     if (!listId) return;
     saveInstanceData(state.instance, { listId });
-    hide(el.listSetupView);
-    show(el.timelineView);
+    showView(el.timelineView);
     await selectList(listId);
   });
 
@@ -411,13 +418,12 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     state.token = token;
     localStorage.setItem('mastofoto:lastInstance', instance);
 
-    hide(el.loginView);
     show(el.sessionInfo);
     el.currentInstance.textContent = instance;
 
     const configuredListId = getInstanceData(instance, 'listId');
     if (configuredListId) {
-      show(el.timelineView);
+      showView(el.timelineView);
       await selectList(configuredListId);
     } else {
       await showListSetup(null);
@@ -432,7 +438,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     hide(el.listMembersHeading);
     el.listSelect.innerHTML = '';
     el.listMembers.innerHTML = '';
-    show(el.listSetupView);
+    showView(el.listSetupView);
 
     try {
       const res = await apiFetch(state.instance, state.token, '/api/v1/lists');
