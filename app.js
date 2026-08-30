@@ -653,7 +653,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
   // ---------- icons ----------
 
   const FAV_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2.5 15.09 9.26 22.5 9.99 17 15.02 18.54 22.5 12 18.5 5.46 22.5 7 15.02 1.5 9.99 8.91 9.26"/></svg>';
-  const BOOST_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11a4 4 0 0 1 4 4v1"/><polyline points="16 4 19 7 16 10"/><path d="M20 17H9a4 4 0 0 1-4-4v-1"/><polyline points="8 20 5 17 8 14"/></svg>';
+  const BOOST_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
   const LINK_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
 
   function renderStatusCard(status) {
