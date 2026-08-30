@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Photo images lacking an author-provided description now get a fallback `alt` ("Photo without a description") instead of an empty one, so screen readers announce that a photo exists rather than skipping it entirely.
 - Error/status messages (`#login-error`, `#list-setup-error`, `#timeline-error`, `#no-list-message`) now use `role="alert"`/`aria-live="polite"` so they're announced automatically instead of requiring the user to find them manually.
 - The lightbox now has `role="dialog"`/`aria-modal="true"`, and moves focus to its close button on open and back to the triggering photo on close.
+- Split the brand blue from an accessible one: `#2b90d9` measured only ~3.45:1 as text/button-label color, so it's now reserved for non-text branding (the logo/favicon/`theme-color`) only. Links use a new `--link` token (`#1a6699` light / `#5aa9e6` dark — brighter in dark mode since a link's background is the page surface, which changes per theme), and solid buttons/the "New" badge/the active favourite-reblog state use `--btn-primary-bg` (`#1c69a0`, same in both themes since a button's own fill is its immediate background regardless of page theme). Both pass 4.5:1+ with their paired text color.
 
 ### Changed
 
