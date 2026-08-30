@@ -12,6 +12,7 @@ A static web app that shows only the photo posts from one Mastodon list, letting
 - Favourite (⭐), reblog (🔁), and jump to the original post directly from the feed
 - New posts highlighted since your last visit
 - Light and dark theme, switchable in Settings
+- Installable on your phone's home screen, with pull-to-refresh and offline access to the app itself (a service worker caches the app's own files, never your Mastodon data)
 - Content-warning posts collapsed behind a toggle
 - Session persisted per instance in the browser
 
@@ -39,6 +40,8 @@ Since the app must be served over `http(s)://`, the simplest option is a free st
 ## Data & privacy
 
 There is no server behind this app, so no server ever stores any of your data. Everything (app credentials, access token, chosen list) is stored only in your own browser's `localStorage`, scoped per Mastodon instance, and never leaves your machine except in requests sent directly to your chosen Mastodon instance. This is also stated as a notice on the login page. Because there's no backend, the OAuth client secret is visible in the browser — acceptable for personal use, but don't treat it as a secret.
+
+Some deployments of Mastofoto (including the maintainer's own) may run basic, privacy-friendly analytics (e.g. Umami) to see approximate visit counts. This only records anonymous page views, never anything from your Mastodon account or activity — and the code in this repository, as described here, carries none of it.
 
 ## Accessibility
 

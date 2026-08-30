@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Updated the About/Info page and README to catch up with everything shipped since they were last written: the Features list now mentions the theme picker, PWA installability, pull-to-refresh, offline app-shell caching, and jumping to the original post; Security & data now discloses the service worker's scope (app files only, never Mastodon data) and, honestly, that some deployments (including the maintainer's own) may run basic anonymous analytics — the code in this repository carries none.
+
 ### Fixed
 
 - Logging out while viewing the About/Info page left it visible behind the login form, since the logout handler never hid it — every view-switching handler now goes through a single `showView()` helper that always hides all four views before showing one, so this whole class of "forgot to hide X" bug can't recur.

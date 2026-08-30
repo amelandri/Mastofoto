@@ -108,9 +108,11 @@
         <li>Log in with any Mastodon instance — no server-side setup required</li>
         <li>Choose which list to follow, with a preview of its members</li>
         <li>See only posts (and boosts) containing photos, at full resolution</li>
-        <li>Favourite and reblog directly from the feed</li>
+        <li>Favourite, reblog, and jump to the original post directly from the feed</li>
         <li>New posts are highlighted since your last visit</li>
         <li>Click any photo to view it full-size</li>
+        <li>Light and dark theme, switchable anytime in Settings</li>
+        <li>Installable on your phone's home screen, with pull-to-refresh and offline access to the app itself</li>
       </ul>
 
       <h3>Accessibility</h3>
@@ -130,6 +132,8 @@
         <li>Post content is run through an allowlist filter before being displayed, and only <code>http(s)</code> links are ever made clickable.</li>
         <li>The page is served over HTTPS and sets a Content-Security-Policy restricting where scripts and styles may load from.</li>
         <li>Because there's no backend, the app's own OAuth client credentials are visible in your browser — normal for a purely client-side app like this one, and not something that exposes your account or password.</li>
+        <li>A service worker caches only the app's own files, so it still loads without a connection — it never caches or has any access to your Mastodon data.</li>
+        <li>Some deployments of Mastofoto (including the maintainer's own) may run basic, privacy-friendly analytics (e.g. Umami) to see approximate visit counts — it only records anonymous page views, nothing about your Mastodon account or activity.</li>
       </ul>
 
       <p>Mastofoto is open source, released under the MIT license.<br>
