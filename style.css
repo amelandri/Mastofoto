@@ -414,13 +414,13 @@ a.member-name:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 14px;
 }
 
 .status-header img {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: 6px;
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -428,6 +428,8 @@ a.member-name:hover {
 .status-author {
   min-width: 0;
   flex: 1 1 auto;
+  height: 48px;
+  padding-top: 2px;
 }
 
 .status-author .display-name,
