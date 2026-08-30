@@ -36,7 +36,7 @@
   --accent: #2b90d9;
   --accent-active: #1c69a0;
   --accent-contrast: #fff;
-  --shadow: rgba(0, 0, 0, 0.4);
+  --shadow: rgba(0, 0, 0, 0);
   --overlay-bg: rgba(0, 0, 0, 0.9);
 }
 
