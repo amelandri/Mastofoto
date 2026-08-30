@@ -9,6 +9,7 @@
   --text-tertiary: #6e6e6e;
   --border: #eee;
   --border-strong: #8a9099;
+  --border-light: #eeeeee;
   --btn-secondary-bg: #eef1f4;
   --btn-secondary-bg-hover: #dde1e4;
   --btn-icon-bg: #d0cfcf;
@@ -33,6 +34,7 @@
   --text-tertiary: #8b8f93;
   --border: #2e3338;
   --border-strong: #6b7178;
+  --border-light: #4c4b4b;
   --btn-secondary-bg: #2a2f34;
   --btn-secondary-bg-hover: #363c42;
   --btn-icon-bg: #3a3f44;
@@ -385,7 +387,6 @@ a.member-name:hover {
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 40px;
-  border-left: 3px solid transparent;
   box-shadow: 0 1px 2px var(--shadow);
 }
 
@@ -404,7 +405,9 @@ a.member-name:hover {
 .reblog-banner {
   font-size: 0.85rem;
   color: var(--text-secondary);
-  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 .status-header {
