@@ -40,6 +40,13 @@ Since the app must be served over `http(s)://`, the simplest option is a free st
 
 There is no server behind this app, so no server ever stores any of your data. Everything (app credentials, access token, chosen list) is stored only in your own browser's `localStorage`, scoped per Mastodon instance, and never leaves your machine except in requests sent directly to your chosen Mastodon instance. This is also stated as a notice on the login page. Because there's no backend, the OAuth client secret is visible in the browser — acceptable for personal use, but don't treat it as a secret.
 
+## Accessibility
+
+- Full keyboard support: photos can be focused and opened (Enter/Space) without a mouse, and the lightbox moves focus to its close button on open and back to the triggering photo on close.
+- Screen reader friendly: a proper heading structure (one `<h1>` per page), labeled form controls, and `aria-live`/`role="alert"` regions so errors and status messages are announced automatically instead of requiring the user to go looking for them. Photos without an author-provided description get a fallback alt text rather than being silently skipped.
+- Color contrast checked against WCAG AA by computing actual contrast ratios (not eyeballed) for every text/background/border pairing, in both the light and dark theme. The one deliberate exception is the brand blue on the logo/favicon, which is decorative and not used anywhere as text or button-label color for exactly this reason — everywhere text appears, a separate, verified-accessible blue is used instead.
+- This hasn't been tested end-to-end with real assistive technology (a screen reader, a switch device, etc.) — the above is based on semantic markup and computed contrast, not a full manual audit. Issue reports from real-world usage are welcome.
+
 ## Limitations
 
 - Single list at a time — not a general-purpose Mastodon client
