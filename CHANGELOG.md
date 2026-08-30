@@ -6,8 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Dark theme (background `#191d20`), switchable from a new "Theme" setting on the renamed Settings screen. Defaults to the OS/browser's `prefers-color-scheme` when no explicit choice has been saved; the pick persists in `localStorage` and applies instantly, including updating the mobile/PWA `theme-color`.
+
 ### Changed
 
+- Renamed "List Management" to "Settings", reorganizing the screen into a "List" section (unchanged content) and a new "Appearance" section (the theme picker).
 - Redesigned the "New" badge and timestamp on desktop: instead of sharing one line pushed to the right, they now stack in a right-aligned column, with the badge vertically lined up with the author's name and the date with their handle.
 - On mobile, the "New" badge no longer sits inline with the wrapped date — it's now pinned to the top-right corner of the post card, while the date stays under the author info as before.
 

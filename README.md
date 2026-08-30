@@ -11,6 +11,7 @@ A static web app that shows only the photo posts from one Mastodon list, letting
 - Shows only posts (and boosts) that contain photos, at full resolution, with a click-to-enlarge lightbox
 - Favourite (⭐), reblog (🔁), and jump to the original post directly from the feed
 - New posts highlighted since your last visit
+- Light and dark theme, switchable in Settings
 - Content-warning posts collapsed behind a toggle
 - Session persisted per instance in the browser
 
@@ -25,7 +26,7 @@ A static web app that shows only the photo posts from one Mastodon list, letting
 1. Open the app at its hosted URL (e.g. `https://<username>.github.io/<repo>/`).
 2. Enter your instance domain (e.g. `mastodon.uno`) and click **Connect**. You'll be redirected to your instance to approve access, then sent straight back.
 3. Choose which list to use — the app remembers it for next time.
-4. Browse, favourite, and boost the photo posts from that list. Use **List Management** anytime to switch lists.
+4. Browse, favourite, and boost the photo posts from that list. Use **Settings** anytime to switch lists or change the theme.
 
 ## How authentication works
 

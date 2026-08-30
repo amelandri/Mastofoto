@@ -9,6 +9,23 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
   const APP_NAME = 'Mastofoto';
   const PENDING_INSTANCE_KEY = 'mastofoto:pendingInstance';
   const PENDING_STATE_KEY = 'mastofoto:pendingState';
+  const THEME_KEY = 'mastofoto:theme';
+
+  // ---------- theme ----------
+
+  function getPreferredTheme() {
+    const stored = localStorage.getItem(THEME_KEY);
+    if (stored === 'light' || stored === 'dark') return stored;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) themeColorMeta.content = theme === 'dark' ? '#191d20' : '#f2f3f5';
+  }
+
+  applyTheme(getPreferredTheme());
 
   // ---------- storage helpers ----------
 
@@ -160,6 +177,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     listSetupView: document.getElementById('list-setup-view'),
     listSelect: document.getElementById('list-select'),
     useListBtn: document.getElementById('use-list-btn'),
+    themeSelect: document.getElementById('theme-select'),
     listSetupError: document.getElementById('list-setup-error'),
     noListMessage: document.getElementById('no-list-message'),
     listMembersHeading: document.getElementById('list-members-heading'),
@@ -174,6 +192,13 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
   };
 
   el.appVersion.textContent = APP_VERSION;
+
+  el.themeSelect.value = getPreferredTheme();
+  el.themeSelect.addEventListener('change', () => {
+    const theme = el.themeSelect.value;
+    localStorage.setItem(THEME_KEY, theme);
+    applyTheme(theme);
+  });
 
   // ---------- lightbox ----------
 

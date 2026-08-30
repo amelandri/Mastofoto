@@ -21,7 +21,7 @@
       <span id="current-instance" class="instance-label"></span>
     </div>
     <div id="session-info" class="hidden">
-      <button id="change-list-btn" aria-label="List Management" title="List Management"><span class="btn-icon">📋</span><span class="btn-label">List Management</span></button>
+      <button id="change-list-btn" aria-label="Settings" title="Settings"><span class="btn-icon">⚙️</span><span class="btn-label">Settings</span></button>
       <button id="logout-btn" aria-label="Log out" title="Log out"><span class="btn-icon">🚪</span><span class="btn-label">Log out</span></button>
       <button id="info-btn" class="icon-btn" aria-label="About Mastofoto" title="About Mastofoto">i</button>
     </div>
@@ -64,17 +64,30 @@
   <section id="list-setup-view" class="hidden">
     <div class="card">
       <div class="section-header">
-        <h2>Choose which list to use</h2>
+        <h2>Settings</h2>
         <a href="." class="home-link">← Home Page</a>
       </div>
-      <div class="form-row">
-        <select id="list-select"></select>
-        <button id="use-list-btn">Use this list</button>
+
+      <div class="settings-section">
+        <h3>List</h3>
+        <div class="form-row">
+          <select id="list-select"></select>
+          <button id="use-list-btn">Use this list</button>
+        </div>
+        <p id="list-setup-error" class="error hidden"></p>
+        <p id="no-list-message" class="hint hidden">No lists found. Create a list on Mastodon and add the accounts you want to follow to it.</p>
+        <h4 id="list-members-heading" class="hint hidden">Members</h4>
+        <ul id="list-members"></ul>
       </div>
-      <p id="list-setup-error" class="error hidden"></p>
-      <p id="no-list-message" class="hint hidden">No lists found. Create a list on Mastodon and add the accounts you want to follow to it.</p>
-      <h3 id="list-members-heading" class="hint hidden">Members</h3>
-      <ul id="list-members"></ul>
+
+      <div class="settings-section">
+        <h3>Appearance</h3>
+        <label for="theme-select">Theme</label>
+        <select id="theme-select">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </div>
     </div>
   </section>
 
