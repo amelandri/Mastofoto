@@ -126,6 +126,14 @@
         <li>Click any photo to view it full-size</li>
       </ul>
 
+      <h3>Accessibility</h3>
+      <ul>
+        <li>Full keyboard support: photos can be focused and opened (Enter/Space) without a mouse, and the lightbox moves focus to its close button on open and back to the triggering photo on close.</li>
+        <li>Screen reader friendly: a proper heading structure, labeled form controls, and live regions so errors and status messages are announced automatically. Photos without an author-provided description get a fallback alt text rather than being silently skipped.</li>
+        <li>Color contrast checked against WCAG AA by computing actual contrast ratios for every text/background/border pairing, in both the light and dark theme. The brand blue on the logo is decorative only and never used as text or button-label color for this reason — a separate, verified-accessible blue is used everywhere text appears.</li>
+        <li>This hasn't been tested end-to-end with real assistive technology — the above is based on semantic markup and computed contrast, not a full manual audit.</li>
+      </ul>
+
       <h3>Security &amp; data</h3>
       <ul>
         <li>There is no server: Mastofoto is a static page that talks directly to your Mastodon instance from your browser. Nothing you do here is seen or stored by anyone else.</li>
