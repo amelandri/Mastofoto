@@ -650,6 +650,12 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     return media;
   }
 
+  // ---------- icons ----------
+
+  const FAV_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2.5 15.09 9.26 22.5 9.99 17 15.02 18.54 22.5 12 18.5 5.46 22.5 7 15.02 1.5 9.99 8.91 9.26"/></svg>';
+  const BOOST_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11a4 4 0 0 1 4 4v1"/><polyline points="16 4 19 7 16 10"/><path d="M20 17H9a4 4 0 0 1-4-4v-1"/><polyline points="8 20 5 17 8 14"/></svg>';
+  const LINK_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+
   function renderStatusCard(status) {
     const isReblog = !!status.reblog;
     const original = isReblog ? status.reblog : status;
@@ -661,7 +667,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     if (isReblog) {
       const banner = document.createElement('div');
       banner.className = 'reblog-banner';
-      banner.textContent = `🔁 ${status.account.display_name || status.account.username} boosted`;
+      banner.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span>${escapeHtml(status.account.display_name || status.account.username)} boosted`;
       card.appendChild(banner);
     }
 
@@ -712,13 +718,15 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     actions.className = 'status-actions';
 
     const favBtn = document.createElement('button');
-    favBtn.textContent = `⭐ ${original.favourites_count}`;
+    favBtn.setAttribute('aria-label', 'Favourite');
+    favBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${FAV_ICON_SVG}</span><span class="btn-count">${original.favourites_count}</span>`;
     if (original.favourited) favBtn.classList.add('active');
     favBtn.addEventListener('click', () => toggleFavourite(original.id, favBtn));
     actions.appendChild(favBtn);
 
     const boostBtn = document.createElement('button');
-    boostBtn.textContent = `🔁 ${original.reblogs_count}`;
+    boostBtn.setAttribute('aria-label', 'Reblog');
+    boostBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span><span class="btn-count">${original.reblogs_count}</span>`;
     if (original.reblogged) boostBtn.classList.add('active');
     if (original.visibility === 'private' || original.visibility === 'direct') {
       boostBtn.disabled = true;
@@ -732,7 +740,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
       originalLink.href = original.url;
       originalLink.target = '_blank';
       originalLink.rel = 'noopener noreferrer';
-      originalLink.textContent = '🔗 View post';
+      originalLink.innerHTML = `<span class="btn-icon" aria-hidden="true">${LINK_ICON_SVG}</span><span class="btn-label">View post</span>`;
       actions.appendChild(originalLink);
     }
 
@@ -746,7 +754,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     try {
       const res = await apiFetch(state.instance, state.token, `/api/v1/statuses/${statusId}/${action}`, { method: 'POST' });
       const updated = await res.json();
-      btn.textContent = `⭐ ${updated.favourites_count}`;
+      btn.querySelector('.btn-count').textContent = updated.favourites_count;
       btn.classList.toggle('active', !isActive);
     } catch (err) {
       showError(el.timelineError, err.message);
@@ -760,7 +768,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
       const res = await apiFetch(state.instance, state.token, `/api/v1/statuses/${statusId}/${action}`, { method: 'POST' });
       const updated = await res.json();
       const target = isActive ? updated : updated.reblog || updated;
-      btn.textContent = `🔁 ${target.reblogs_count}`;
+      btn.querySelector('.btn-count').textContent = target.reblogs_count;
       btn.classList.toggle('active', !isActive);
     } catch (err) {
       showError(el.timelineError, err.message);

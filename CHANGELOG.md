@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - On mobile, the "New" badge no longer sits inline with the wrapped date — it's now pinned to the top-right corner of the post card, while the date stays under the author info as before.
 - Added explicit `aria-label`s to the "List Management" and "Log out" header buttons, matching the existing info button, so screen readers announce them correctly once their text labels collapse to icon-only on mobile.
 - `isHttpUrl`, `hasPhoto`, and `parseNextMaxId` moved out of `app.js` into a new `pure.mjs` module, with `app.js` now loaded as `<script type="module">` importing them. A minimal `package.json` (`"type": "module"`, no dependencies) was added so Node resolves the same `import` for testing.
+- Replaced every emoji icon (header Settings/Info/Log out, and the feed's Favourite/Reblog/View post buttons and "boosted" banner) with small inline flat SVG icons using `stroke="currentColor"`/`fill="currentColor"`, so they automatically pick up the surrounding text color — including the active/pressed state on the favourite and reblog buttons, and both themes — without needing separate light/dark image assets. Being inline markup rather than image files, they add effectively no extra page weight. Removed the now-unused `.icon-btn` CSS rules left over from the header buttons' earlier emoji-based styling.
 
 ### Fixed
 

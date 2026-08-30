@@ -108,30 +108,17 @@ body {
   text-decoration: underline;
 }
 
-.icon-btn {
-  padding: 0;
-  width: auto;
-  height: auto;
-  font-size: 1.1rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  border: 0 !important;
-  background: none !important;
-  color: var(--link);
-  font-weight: bold;
-  font-style: italic;
-  font-family: Serif;
-}
-
-.icon-btn{
-  text-decoration: underline;
-}
-
 .btn-icon {
   margin-right: 6px;
   opacity: 0.7;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .hidden {
@@ -590,6 +577,16 @@ a.username:hover {
   color: var(--accent-contrast);
 }
 
+.status-actions .btn-icon,
+.reblog-banner .btn-icon {
+  opacity: 1;
+}
+
+.reblog-banner {
+  display: flex;
+  align-items: center;
+}
+
 #load-more-btn {
   display: block;
   margin: 10px auto;
@@ -610,7 +607,6 @@ a.username:hover {
     width: 28px;
     height: 28px;
     padding: 0;
-    font-size: 1.2rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -618,6 +614,11 @@ a.username:hover {
 
   #session-info .btn-icon {
     margin-right: 0;
+  }
+
+  #session-info .btn-icon svg {
+    width: 20px;
+    height: 20px;
   }
 
   #session-info .btn-label {
