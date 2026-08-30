@@ -631,7 +631,10 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
           ? `<a class="username" href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">@${escapeHtml(original.account.acct)}</a>`
           : `<div class="username">@${escapeHtml(original.account.acct)}</div>`}
       </div>
-      <div class="status-date">${isNew ? '<span class="new-badge">New</span>' : ''} ${escapeHtml(formatStatusDate(original.created_at))}</div>
+      <div class="status-meta">
+        ${isNew ? '<span class="new-badge">New</span>' : ''}
+        <div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>
+      </div>
     `;
     card.appendChild(header);
 

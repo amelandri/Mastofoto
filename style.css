@@ -284,6 +284,7 @@ a.member-name:hover {
 }
 
 .status-card {
+  position: relative;
   background: #fff;
   border-radius: 8px;
   padding: 16px;
@@ -302,7 +303,6 @@ a.member-name:hover {
   padding: 4px 9px;
   border-radius: 4px;
   white-space: nowrap;
-  margin-right: 10px;
 }
 
 .reblog-banner {
@@ -357,9 +357,16 @@ a.username:hover {
   text-decoration: underline;
 }
 
-.status-date {
+.status-meta {
   flex-shrink: 0;
   margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.status-date {
   color: #a8a8a8;
   font-size: 0.8rem;
   white-space: nowrap;
@@ -465,7 +472,7 @@ a.username:hover {
 }
 
 .status-actions button.active {
-  background: #2b90d9;
+  background: #74b3e0;
   color: #fff;
 }
 
@@ -511,11 +518,21 @@ a.username:hover {
     flex-wrap: wrap;
   }
 
-  .status-date {
+  .status-meta {
     flex-basis: 100%;
-    margin-top: -8px;
     margin-left: 0;
+    align-items: flex-start;
+  }
+
+  .status-date {
+    margin-top: -8px;
     padding-left: 50px;
+  }
+
+  .new-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
   }
 
 }

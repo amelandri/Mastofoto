@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Redesigned the "New" badge and timestamp on desktop: instead of sharing one line pushed to the right, they now stack in a right-aligned column, with the badge vertically lined up with the author's name and the date with their handle.
+- On mobile, the "New" badge no longer sits inline with the wrapped date — it's now pinned to the top-right corner of the post card, while the date stays under the author info as before.
+
 ### Added
 
 - A service worker (`sw.js`) caches the static app shell (HTML/CSS/JS/manifest/icons) so the app still loads when offline or on a flaky connection — network-first with cache fallback, and scoped to same-origin requests only, so it never touches Mastodon API responses.
