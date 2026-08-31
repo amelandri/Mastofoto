@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - A "Load failed" timeline error stayed on screen even after a subsequent load succeeded (e.g. pulling to refresh once the connection came back), because only `selectList()` cleared it — pull-to-refresh calls `loadTimeline()` directly and skipped that step. The error is now cleared at the top of `loadTimeline()` itself, so every caller is covered.
 - Reloading the page while already logged in briefly flashed the login screen before the photo feed appeared, because `login-view` was the only view visible by default in the static HTML — it stayed on screen for the moment it took `startSession()`'s network round-trip to verify the stored session and switch views. `login-view` now starts hidden like the other three views, and the bootstrap explicitly shows it only when there's actually no session to resume.
 
+### Changed
+
+- Improved informations about source code and selfhosting
+
 ## [0.5.0] - 2026-08-31
 
 ### Added
