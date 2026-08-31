@@ -438,7 +438,7 @@ a.member-name:hover {
   min-width: 0;
   flex: 1 1 auto;
   height: 48px;
-  padding-top: 2px;
+  padding-top: 1px;
 }
 
 .status-author .display-name,
@@ -671,7 +671,7 @@ a.username:hover {
 
   .status-author .username {
     display: block;
-    width: 185px;
+    width: 195px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: clip;
@@ -686,8 +686,8 @@ a.username:hover {
 
 
   .status-date {
-    margin-top:4px;
-    font-size: 0.8rem;
+    margin-top:19px;
+    font-size: 0.7rem;
   }
 
   .status-card {
