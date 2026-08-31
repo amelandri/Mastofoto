@@ -1,10 +1,60 @@
 * { box-sizing: border-box; }
 
+:root {
+  color-scheme: light;
+  --bg: #f2f3f5;
+  --surface: #fff;
+  --text: #1c1e21;
+  --text-secondary: #666;
+  --text-tertiary: #6e6e6e;
+  --border: #eee;
+  --border-strong: #8a9099;
+  --border-light: #eeeeee;
+  --btn-secondary-bg: #eef1f4;
+  --btn-secondary-bg-hover: #dde1e4;
+  --btn-icon-bg: #d0cfcf;
+  --error: #d13c3c;
+  --btn-primary-bg: #1c69a0;
+  --accent-contrast: #fff;
+  --link: #1a6699;
+  --link-header: #666666;
+  --link-header-hover: rgba(255, 255, 255, 0.3);
+  --shadow: rgba(0, 0, 0, 0.1);
+  --overlay-bg: rgba(0, 0, 0, 0.9);
+  --lightbox-btn-bg: rgba(255, 255, 255, 0.15);
+  --lightbox-btn-bg-hover: rgba(255, 255, 255, 0.3);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #191d20;
+  --surface: #22262b;
+  --text: #e8eaed;
+  --text-secondary: #9aa0a6;
+  --text-tertiary: #8b8f93;
+  --border: #2e3338;
+  --border-strong: #6b7178;
+  --border-light: #4c4b4b;
+  --btn-secondary-bg: #2a2f34;
+  --btn-secondary-bg-hover: #363c42;
+  --btn-icon-bg: #3a3f44;
+  --error: #ff6b6b;
+  --btn-primary-bg: #1c69a0;
+  --accent-contrast: #fff;
+  --link: #5aa9e6;
+  --link-header: #5aa9e6;
+  --link-header-hover: #1c69a0;
+  --shadow: rgba(0, 0, 0, 0);
+  --overlay-bg: rgba(0, 0, 0, 0.9);
+  --lightbox-btn-bg: rgba(255, 255, 255, 0.15);
+  --lightbox-btn-bg-hover: rgba(255, 255, 255, 0.3);
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #f2f3f5;
-  color: #1c1e21;
+  background: var(--bg);
+  color: var(--text);
   overscroll-behavior-y: contain;
 }
 
@@ -35,7 +85,7 @@ body {
 .instance-label {
   margin-top: 2px;
   font-size: 0.7rem;
-  color: #979797;
+  color: var(--text-tertiary);
   padding-left: 0.4rem;
 }
 
@@ -43,70 +93,94 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  
 }
 
 #session-info button {
-  background: #eef1f4;
-  color: #1c1e21;
-  border: 1px solid #ccd0d5;
-  opacity: 0.6;
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  color: var(--link-header);
+  font-weight: 600;
 }
 
-#session-info button:hover {
-  background: #dde1e4;
-  color: #1c1e21;
-  border: 1px solid #ccd0d5;
-  opacity: 0.8;
+#session-info button .btn-label:hover {
+  background: none;
+  border: none;
+  color: var(--link);
+  text-decoration: underline;
 }
-
-.icon-btn {
-  padding: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  font-size: 0.9rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  border:0 !important;
-  background: #d0cfcf !important;
-  font-weight: bold;
-  font-style: italic;
-  font-family: Serif;}
 
 .btn-icon {
   margin-right: 6px;
+  opacity: 0.7;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.status-actions .btn-icon svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+  margin-top: -2px;
+}
+
+.status-actions .view-original-btn .btn-icon svg {
+  margin-top: 0px;
+}
+
+.reblog-banner .btn-icon svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+  stroke-width: 3;
+  color: var(--link);
 }
 
 .hidden {
   display: none !important;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 #app {
-  padding: 20px;
+  padding: 10px 20px 20px 20px;
   max-width: 900px;
   margin: 0 auto;
 }
 
 .card {
-  background: #fff;
+  background: var(--surface);
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 16px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 2px var(--shadow);
 }
 
 .intro {
   margin: 0 0 18px;
   font-size: 1.05rem;
   line-height: 1.5;
-  color: #333;
+  color: var(--text);
 }
 
 .intro a {
-  color: #2b90d9;
+  color: var(--link);
 }
 
 .section-header {
@@ -122,32 +196,46 @@ body {
 }
 
 .home-link {
-  color: #1c1e21;
+  color: var(--link);
   font-size: 0.9rem;
   white-space: nowrap;
-  opacity: 0.6;
   text-decoration: none;
 }
 
-.home-link:hover{
-  opacity: 0.8;
+.link-button {
+  display: inline;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: var(--link);
+  font: inherit;
+  cursor: pointer;
+}
+
+.link-button:hover {
   text-decoration: underline;
+}
+
+h3 {
+  color: var(--text);
 }
 
 label {
   display: block;
   margin: 10px 0 4px;
   font-size: 0.9rem;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 input[type="text"], select {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #ccd0d5;
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   font-size: 1rem;
-  background: #fff;
+  background: var(--surface);
+  color: var(--text);
 }
 
 .form-row {
@@ -169,8 +257,8 @@ button {
   padding: 8px 16px;
   border: none;
   border-radius: 6px;
-  background: #2b90d9;
-  color: #fff;
+  background: var(--btn-primary-bg);
+  color: var(--accent-contrast);
   font-size: 0.85rem;
   cursor: pointer;
 }
@@ -179,37 +267,47 @@ button:hover {
   opacity: 0.9;
 }
 
-
-
 .error {
-  color: #d13c3c;
+  color: var(--error);
   margin-top: 10px;
 }
 
 .hint {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.85rem;
 }
 
 .version-tag {
   margin: -10px 0 16px;
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 0.8rem;
 }
 
-.privacy-note {
+.app-disclosure {
   margin-top: 30px;
   padding-top: 30px;
-  border-top: 1px solid #eee;
-  color: #777;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
   font-size: 0.9rem;
   line-height: 1.4;
 }
 
 .copyright {
   margin-top: 16px;
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 0.8rem;
+}
+
+.settings-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.settings-section:first-of-type {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 #list-members-heading {
@@ -227,7 +325,7 @@ button:hover {
   align-items: center;
   gap: 8px;
   padding: 6px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border);
 }
 
 #list-members img {
@@ -241,7 +339,7 @@ button:hover {
 #list-members .member-name {
   font-weight: 600;
   font-size: 0.9rem;
-  color: #1c1e21;
+  color: var(--text);
   text-decoration: none;
 }
 
@@ -250,7 +348,7 @@ a.member-name:hover {
 }
 
 #list-members .member-handle {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.8rem;
 }
 
@@ -261,7 +359,7 @@ a.member-name:hover {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.85rem;
   transition: height 0.2s ease;
 }
@@ -284,44 +382,45 @@ a.member-name:hover {
 }
 
 .status-card {
-  background: #fff;
+  position: relative;
+  background: var(--surface);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 40px;
-  border-left: 3px solid transparent;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 2px var(--shadow);
 }
 
 .new-badge {
-  background: #2b90d9;
-  color: #fff;
-  font-size: 0.7rem;
+  background: var(--btn-primary-bg);
+  color: var(--accent-contrast);
+  font-size: 0.55rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   padding: 4px 9px;
   border-radius: 4px;
   white-space: nowrap;
-  margin-right: 10px;
 }
 
 .reblog-banner {
   font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 8px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 .status-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 14px;
 }
 
 .status-header img {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: 6px;
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -329,6 +428,8 @@ a.member-name:hover {
 .status-author {
   min-width: 0;
   flex: 1 1 auto;
+  height: 48px;
+  padding-top: 2px;
 }
 
 .status-author .display-name,
@@ -343,12 +444,12 @@ a.member-name:hover {
 }
 
 .status-author .display-name a{
-  color: #333333;
+  color: var(--text);
   text-decoration: none;
 }
 
 .status-author .username {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.85rem;
   text-decoration: none;
 }
@@ -357,10 +458,17 @@ a.username:hover {
   text-decoration: underline;
 }
 
-.status-date {
+.status-meta {
   flex-shrink: 0;
   margin-left: auto;
-  color: #a8a8a8;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.status-date {
+  color: var(--text-tertiary);
   font-size: 0.8rem;
   white-space: nowrap;
 }
@@ -375,11 +483,11 @@ a.username:hover {
 }
 
 .status-content a {
-  color: #2b90d9;
+  color: var(--link);
 }
 
 .status-content a.tag-link {
-  color: #8a8d91;
+  color: var(--text-tertiary);
   font-size: 0.85em;
   text-decoration: none;
 }
@@ -400,12 +508,15 @@ a.username:hover {
 
 .status-media img {
   cursor: zoom-in;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
 }
 
 #lightbox {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.9);
+  background: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -419,6 +530,30 @@ a.username:hover {
   max-height: 100%;
   object-fit: contain;
   border-radius: 4px;
+}
+
+#lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--lightbox-btn-bg);
+  color: var(--accent-contrast);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+#lightbox-close:hover {
+  background: var(--lightbox-btn-bg-hover);
+}
+
+.status-media img:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
 }
 
 #info-view h3 {
@@ -436,7 +571,7 @@ a.username:hover {
 }
 
 #info-view a {
-  color: #2b90d9;
+  color: var(--link);
 }
 
 .status-actions {
@@ -448,8 +583,8 @@ a.username:hover {
 .status-actions button,
 .status-actions .view-original-btn {
   margin-top: 0;
-  background: #eef1f4;
-  color: #1c1e21;
+  background: var(--btn-secondary-bg);
+  color: var(--text);
   font-size: 0.85rem;
 }
 
@@ -462,8 +597,18 @@ a.username:hover {
 }
 
 .status-actions button.active {
-  background: #2b90d9;
-  color: #fff;
+  background: var(--btn-primary-bg);
+  color: var(--accent-contrast);
+}
+
+.status-actions .btn-icon,
+.reblog-banner .btn-icon {
+  opacity: 1;
+}
+
+.reblog-banner {
+  display: flex;
+  align-items: center;
 }
 
 #load-more-btn {
@@ -486,7 +631,6 @@ a.username:hover {
     width: 28px;
     height: 28px;
     padding: 0;
-    border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -494,6 +638,11 @@ a.username:hover {
 
   #session-info .btn-icon {
     margin-right: 0;
+  }
+
+  #session-info .btn-icon svg {
+    width: 20px;
+    height: 20px;
   }
 
   #session-info .btn-label {
@@ -508,11 +657,22 @@ a.username:hover {
     flex-wrap: wrap;
   }
 
-  .status-date {
+  .status-meta {
     flex-basis: 100%;
-    margin-top: -8px;
     margin-left: 0;
+    align-items: flex-start;
+  }
+
+  .status-date {
+    margin-top: -8px;
     padding-left: 50px;
+  }
+
+  .new-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    margin-right: 0px;
   }
 
 }

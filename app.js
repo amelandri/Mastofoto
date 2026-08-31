@@ -1,12 +1,31 @@
+import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
+
 (() => {
   'use strict';
 
-  const APP_VERSION = '0.4.1';
+  const APP_VERSION = '0.5.0';
   const REDIRECT_URI = window.location.origin + window.location.pathname;
   const SCOPES = 'read write:favourites write:statuses';
   const APP_NAME = 'Mastofoto';
   const PENDING_INSTANCE_KEY = 'mastofoto:pendingInstance';
   const PENDING_STATE_KEY = 'mastofoto:pendingState';
+  const THEME_KEY = 'mastofoto:theme';
+
+  // ---------- theme ----------
+
+  function getPreferredTheme() {
+    const stored = localStorage.getItem(THEME_KEY);
+    if (stored === 'light' || stored === 'dark') return stored;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) themeColorMeta.content = theme === 'dark' ? '#191d20' : '#f2f3f5';
+  }
+
+  applyTheme(getPreferredTheme());
 
   // ---------- storage helpers ----------
 
@@ -80,34 +99,9 @@
     return res;
   }
 
-  function parseNextMaxId(linkHeader, statuses) {
-    if (linkHeader) {
-      const match = linkHeader.split(',').find(part => part.includes('rel="next"'));
-      if (match) {
-        const urlMatch = match.match(/<([^>]+)>/);
-        if (urlMatch) {
-          const url = new URL(urlMatch[1]);
-          const maxId = url.searchParams.get('max_id');
-          if (maxId) return maxId;
-        }
-      }
-    }
-    if (statuses.length) return statuses[statuses.length - 1].id;
-    return null;
-  }
-
   // ---------- sanitizer ----------
 
   const ALLOWED_TAGS = new Set(['A', 'P', 'BR', 'SPAN', 'STRONG', 'B', 'EM', 'I', 'DEL', 'CODE', 'PRE', 'UL', 'OL', 'LI', 'BLOCKQUOTE']);
-
-  function isHttpUrl(value) {
-    try {
-      const url = new URL(value, window.location.href);
-      return url.protocol === 'http:' || url.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  }
 
   function sanitizeStatusHtml(html) {
     const doc = new DOMParser().parseFromString(html || '', 'text/html');
@@ -164,10 +158,6 @@
     });
   }
 
-  function hasPhoto(status) {
-    const original = status.reblog || status;
-    return (original.media_attachments || []).some(att => att.type === 'image');
-  }
 
   // ---------- DOM refs ----------
 
@@ -177,7 +167,6 @@
     loginError: document.getElementById('login-error'),
     loginView: document.getElementById('login-view'),
     timelineView: document.getElementById('timeline-view'),
-    sessionInfo: document.getElementById('session-info'),
     currentInstance: document.getElementById('current-instance'),
     logoutBtn: document.getElementById('logout-btn'),
     changeListBtn: document.getElementById('change-list-btn'),
@@ -187,6 +176,7 @@
     listSetupView: document.getElementById('list-setup-view'),
     listSelect: document.getElementById('list-select'),
     useListBtn: document.getElementById('use-list-btn'),
+    themeSelect: document.getElementById('theme-select'),
     listSetupError: document.getElementById('list-setup-error'),
     noListMessage: document.getElementById('no-list-message'),
     listMembersHeading: document.getElementById('list-members-heading'),
@@ -195,27 +185,56 @@
     lightboxImg: document.getElementById('lightbox-img'),
     infoBtn: document.getElementById('info-btn'),
     infoView: document.getElementById('info-view'),
+    loginInfoBtn: document.getElementById('login-info-btn'),
     appVersion: document.getElementById('app-version'),
     pullRefresh: document.getElementById('pull-refresh'),
     pullRefreshLabel: document.getElementById('pull-refresh-label'),
+    lightboxClose: document.getElementById('lightbox-close'),
   };
+
+  // ---------- view switching ----------
+  // Exactly one of these four <section>s is ever visible at a time; showView()
+  // is the single place that enforces that, so a handler can never forget to
+  // hide a view it's navigating away from (see CHANGELOG for the logout bug
+  // this replaced).
+
+  const VIEWS = [el.loginView, el.listSetupView, el.timelineView, el.infoView];
+
+  function showView(view) {
+    VIEWS.forEach(hide);
+    show(view);
+  }
 
   el.appVersion.textContent = APP_VERSION;
 
+  el.themeSelect.value = getPreferredTheme();
+  el.themeSelect.addEventListener('change', () => {
+    const theme = el.themeSelect.value;
+    localStorage.setItem(THEME_KEY, theme);
+    applyTheme(theme);
+  });
+
   // ---------- lightbox ----------
 
-  function openLightbox(src, alt) {
+  let lightboxTrigger = null;
+
+  function openLightbox(src, alt, triggerEl) {
     el.lightboxImg.src = src;
-    el.lightboxImg.alt = alt || '';
+    el.lightboxImg.alt = alt || 'Photo without a description';
+    lightboxTrigger = triggerEl || document.activeElement;
     show(el.lightbox);
+    el.lightboxClose.focus();
   }
 
   function closeLightbox() {
     hide(el.lightbox);
     el.lightboxImg.src = '';
+    if (lightboxTrigger) lightboxTrigger.focus();
+    lightboxTrigger = null;
   }
 
   el.lightbox.addEventListener('click', closeLightbox);
+  el.lightboxClose.addEventListener('click', closeLightbox);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeLightbox();
   });
@@ -283,11 +302,8 @@
 
   // ---------- info page ----------
 
-  el.infoBtn.addEventListener('click', () => {
-    hide(el.timelineView);
-    hide(el.listSetupView);
-    show(el.infoView);
-  });
+  el.infoBtn.addEventListener('click', () => showView(el.infoView));
+  el.loginInfoBtn.addEventListener('click', () => showView(el.infoView));
 
   // ---------- login flow ----------
 
@@ -344,16 +360,14 @@
     state.instance = null;
     state.token = null;
     state.currentListId = null;
-    hide(el.timelineView);
-    hide(el.listSetupView);
-    hide(el.sessionInfo);
-    show(el.loginView);
+    hide(el.changeListBtn);
+    hide(el.logoutBtn);
+    showView(el.loginView);
     el.instanceInput.value = '';
     el.currentInstance.textContent = '';
   });
 
   el.changeListBtn.addEventListener('click', () => {
-    hide(el.timelineView);
     showListSetup(getInstanceData(state.instance, 'listId'));
   });
 
@@ -361,8 +375,7 @@
     const listId = el.listSelect.value;
     if (!listId) return;
     saveInstanceData(state.instance, { listId });
-    hide(el.listSetupView);
-    show(el.timelineView);
+    showView(el.timelineView);
     await selectList(listId);
   });
 
@@ -405,13 +418,13 @@
     state.token = token;
     localStorage.setItem('mastofoto:lastInstance', instance);
 
-    hide(el.loginView);
-    show(el.sessionInfo);
+    show(el.changeListBtn);
+    show(el.logoutBtn);
     el.currentInstance.textContent = instance;
 
     const configuredListId = getInstanceData(instance, 'listId');
     if (configuredListId) {
-      show(el.timelineView);
+      showView(el.timelineView);
       await selectList(configuredListId);
     } else {
       await showListSetup(null);
@@ -426,7 +439,7 @@
     hide(el.listMembersHeading);
     el.listSelect.innerHTML = '';
     el.listMembers.innerHTML = '';
-    show(el.listSetupView);
+    showView(el.listSetupView);
 
     try {
       const res = await apiFetch(state.instance, state.token, '/api/v1/lists');
@@ -501,6 +514,98 @@
     });
   }
 
+  // ---------- blurhash ----------
+  // Reimplementation of the public blurhash decode algorithm (https://blurha.sh) —
+  // no external library, to keep the app free of runtime dependencies.
+
+  const BLURHASH_DIGITS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~';
+
+  function decode83(str) {
+    let value = 0;
+    for (let i = 0; i < str.length; i++) {
+      value = value * 83 + BLURHASH_DIGITS.indexOf(str[i]);
+    }
+    return value;
+  }
+
+  function sRGBToLinear(value) {
+    const v = value / 255;
+    return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  }
+
+  function linearToSRGB(value) {
+    const v = Math.max(0, Math.min(1, value));
+    return v <= 0.0031308
+      ? Math.round(v * 12.92 * 255)
+      : Math.round((1.055 * Math.pow(v, 1 / 2.4) - 0.055) * 255);
+  }
+
+  function signPow(value, exp) {
+    return Math.sign(value) * Math.pow(Math.abs(value), exp);
+  }
+
+  function decodeBlurhash(hash, width, height) {
+    const sizeFlag = decode83(hash[0]);
+    const numX = (sizeFlag % 9) + 1;
+    const numY = Math.floor(sizeFlag / 9) + 1;
+
+    const maxValue = (decode83(hash[1]) + 1) / 166;
+
+    const colors = [];
+    for (let i = 0; i < numX * numY; i++) {
+      if (i === 0) {
+        const value = decode83(hash.substring(2, 6));
+        colors.push([sRGBToLinear(value >> 16), sRGBToLinear((value >> 8) & 255), sRGBToLinear(value & 255)]);
+      } else {
+        const value = decode83(hash.substring(4 + i * 2, 6 + i * 2));
+        colors.push([
+          signPow((Math.floor(value / (19 * 19)) - 9) / 9, 2) * maxValue,
+          signPow((Math.floor(value / 19) % 19 - 9) / 9, 2) * maxValue,
+          signPow((value % 19 - 9) / 9, 2) * maxValue,
+        ]);
+      }
+    }
+
+    const bytesPerRow = width * 4;
+    const pixels = new Uint8ClampedArray(bytesPerRow * height);
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        let r = 0, g = 0, b = 0;
+        for (let j = 0; j < numY; j++) {
+          for (let i = 0; i < numX; i++) {
+            const basis = Math.cos((Math.PI * x * i) / width) * Math.cos((Math.PI * y * j) / height);
+            const color = colors[i + j * numX];
+            r += color[0] * basis;
+            g += color[1] * basis;
+            b += color[2] * basis;
+          }
+        }
+        const pixelIndex = 4 * x + y * bytesPerRow;
+        pixels[pixelIndex] = linearToSRGB(r);
+        pixels[pixelIndex + 1] = linearToSRGB(g);
+        pixels[pixelIndex + 2] = linearToSRGB(b);
+        pixels[pixelIndex + 3] = 255;
+      }
+    }
+    return pixels;
+  }
+
+  function blurhashToDataUrl(hash) {
+    try {
+      const size = 32;
+      const pixels = decodeBlurhash(hash, size, size);
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.putImageData(new ImageData(pixels, size, size), 0, 0);
+      return canvas.toDataURL();
+    } catch {
+      return null;
+    }
+  }
+
   function buildMediaElement(original) {
     if (!original.media_attachments || !original.media_attachments.length) return null;
     const media = document.createElement('div');
@@ -509,10 +614,31 @@
       if (att.type === 'image') {
         const img = document.createElement('img');
         const fullSrc = att.url || att.preview_url;
+        const dimensions = att.meta?.original || att.meta?.small;
+        if (dimensions?.width && dimensions?.height) {
+          img.width = dimensions.width;
+          img.height = dimensions.height;
+        }
+        if (att.blurhash) {
+          const placeholder = blurhashToDataUrl(att.blurhash);
+          if (placeholder) {
+            img.style.backgroundImage = `url(${placeholder})`;
+            img.addEventListener('load', () => { img.style.backgroundImage = ''; }, { once: true });
+          }
+        }
         img.src = fullSrc;
-        img.alt = att.description || '';
+        img.alt = att.description || 'Photo without a description';
         img.loading = 'lazy';
-        img.addEventListener('click', () => openLightbox(fullSrc, att.description));
+        img.tabIndex = 0;
+        img.setAttribute('role', 'button');
+        img.setAttribute('aria-label', att.description ? `View photo: ${att.description}` : 'View photo full size');
+        img.addEventListener('click', () => openLightbox(fullSrc, att.description, img));
+        img.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openLightbox(fullSrc, att.description, img);
+          }
+        });
         media.appendChild(img);
       } else if (att.type === 'video' || att.type === 'gifv') {
         const video = document.createElement('video');
@@ -523,6 +649,12 @@
     });
     return media;
   }
+
+  // ---------- icons ----------
+
+  const FAV_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2.5 15.09 9.26 22.5 9.99 17 15.02 18.54 22.5 12 18.5 5.46 22.5 7 15.02 1.5 9.99 8.91 9.26"/></svg>';
+  const BOOST_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
+  const LINK_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
 
   function renderStatusCard(status) {
     const isReblog = !!status.reblog;
@@ -535,7 +667,7 @@
     if (isReblog) {
       const banner = document.createElement('div');
       banner.className = 'reblog-banner';
-      banner.textContent = `🔁 ${status.account.display_name || status.account.username} boosted`;
+      banner.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span>${escapeHtml(status.account.display_name || status.account.username)} boosted`;
       card.appendChild(banner);
     }
 
@@ -554,7 +686,10 @@
           ? `<a class="username" href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">@${escapeHtml(original.account.acct)}</a>`
           : `<div class="username">@${escapeHtml(original.account.acct)}</div>`}
       </div>
-      <div class="status-date">${isNew ? '<span class="new-badge">New</span>' : ''} ${escapeHtml(formatStatusDate(original.created_at))}</div>
+      <div class="status-meta">
+        ${isNew ? '<span class="new-badge">New</span>' : ''}
+        <div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>
+      </div>
     `;
     card.appendChild(header);
 
@@ -583,13 +718,13 @@
     actions.className = 'status-actions';
 
     const favBtn = document.createElement('button');
-    favBtn.textContent = `⭐ ${original.favourites_count}`;
+    favBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${FAV_ICON_SVG}</span><span class="sr-only">Favourite,</span> <span class="btn-count">${original.favourites_count}</span>`;
     if (original.favourited) favBtn.classList.add('active');
     favBtn.addEventListener('click', () => toggleFavourite(original.id, favBtn));
     actions.appendChild(favBtn);
 
     const boostBtn = document.createElement('button');
-    boostBtn.textContent = `🔁 ${original.reblogs_count}`;
+    boostBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span><span class="sr-only">Reblog,</span> <span class="btn-count">${original.reblogs_count}</span>`;
     if (original.reblogged) boostBtn.classList.add('active');
     if (original.visibility === 'private' || original.visibility === 'direct') {
       boostBtn.disabled = true;
@@ -603,7 +738,7 @@
       originalLink.href = original.url;
       originalLink.target = '_blank';
       originalLink.rel = 'noopener noreferrer';
-      originalLink.textContent = '🔗 View post';
+      originalLink.innerHTML = `<span class="btn-icon" aria-hidden="true">${LINK_ICON_SVG}</span><span class="btn-label">View post</span>`;
       actions.appendChild(originalLink);
     }
 
@@ -617,7 +752,7 @@
     try {
       const res = await apiFetch(state.instance, state.token, `/api/v1/statuses/${statusId}/${action}`, { method: 'POST' });
       const updated = await res.json();
-      btn.textContent = `⭐ ${updated.favourites_count}`;
+      btn.querySelector('.btn-count').textContent = updated.favourites_count;
       btn.classList.toggle('active', !isActive);
     } catch (err) {
       showError(el.timelineError, err.message);
@@ -631,7 +766,7 @@
       const res = await apiFetch(state.instance, state.token, `/api/v1/statuses/${statusId}/${action}`, { method: 'POST' });
       const updated = await res.json();
       const target = isActive ? updated : updated.reblog || updated;
-      btn.textContent = `🔁 ${target.reblogs_count}`;
+      btn.querySelector('.btn-count').textContent = target.reblogs_count;
       btn.classList.toggle('active', !isActive);
     } catch (err) {
       showError(el.timelineError, err.message);
@@ -688,4 +823,10 @@
       }
     }
   })();
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
 })();

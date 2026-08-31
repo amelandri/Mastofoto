@@ -6,6 +6,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-31
+
+### Added
+
+- **Dark theme**, switchable from a new "Theme" setting on the renamed Settings screen. Defaults to the OS/browser's `prefers-color-scheme` when no explicit choice has been saved; the pick persists in `localStorage` and applies instantly, including updating the mobile/PWA `theme-color`.
+- The About/Info page is now reachable from the login screen too (previously only from the header once logged in), via a new link in the login page's short disclosure text.
+- The header's info button is now always visible, including when logged out — previously it lived inside the same container as "Settings"/"Log out" and was hidden along with them until login.
+- A visible close button on the photo lightbox, and full keyboard support: photos are focusable and open with Enter/Space (previously mouse/touch only), and closing the lightbox returns focus to the photo that opened it.
+- A service worker (`sw.js`) caches the static app shell (HTML/CSS/JS/manifest/icons) so the app still loads when offline or on a flaky connection — network-first with cache fallback, and scoped to same-origin requests only, so it never touches Mastodon API responses.
+- Photos now show a blurred placeholder (decoded from Mastodon's `blurhash` data, no library) while the full-resolution image loads, instead of empty space.
+- A test suite (`pure.test.mjs`, run with `node --test` / `npm test`) covering `pure.mjs`'s functions, including a regression test for the `javascript:` URI issue fixed in 0.4.1.
+
+### Changed
+
+- The mobile/PWA home-screen icon (`apple-touch-icon` and `manifest.json`'s icon) now uses a new `assets/app-icon.png` instead of the plain transparent `favicon.png`: same blue "M", composited over a subtle dark diagonal gradient (`#232a32` to `#12151a`, centered on the app's own dark-theme background) so it reads as a proper opaque icon once a phone's launcher places it over an arbitrary wallpaper, rather than looking inconsistent with a transparent background. The browser-tab favicon (`favicon.ico`/`favicon.png`) is unchanged. Contrast of the "M" against the gradient was checked with the same WCAG relative-luminance formula used elsewhere (≥4.2:1 at every point).
+- Updated the About/Info page and README to catch up with everything shipped since they were last written: the Features list now mentions the theme picker, PWA installability, pull-to-refresh, offline app-shell caching, and jumping to the original post; Security & data now discloses the service worker's scope (app files only, never Mastodon data) and, honestly, that some deployments (including the maintainer's own) may run basic anonymous analytics — the code in this repository carries none.
+- Replaced the login page's long bulleted "Some info about Mastofoto" disclosure with a short sentence and a link to the Info page for the full detail.
+- The header's "Settings", "Log out", and info buttons no longer look like buttons (no background/border) — restyled as colored text links with an underline on hover, using the same `--link` blue as other links. They're still real `<button>` elements under the hood (kept for native keyboard support), just visually plain-link. The link color's contrast was checked without the previous opacity dimming, since that alone was enough to drop it back under 4.5:1 in light mode.
+- Renamed "List Management" to "Settings", reorganizing the screen into a "List" section (unchanged content) and a new "Appearance" section (the theme picker).
+- Every remaining color in `style.css` (brand blue, button text, card shadows, the lightbox overlay) moved into the light/dark CSS variables, so none are hardcoded outside the two `:root` palette blocks.
+- Redesigned the "New" badge and timestamp on desktop: instead of sharing one line pushed to the right, they now stack in a right-aligned column, with the badge vertically lined up with the author's name and the date with their handle.
+- On mobile, the "New" badge no longer sits inline with the wrapped date — it's now pinned to the top-right corner of the post card, while the date stays under the author info as before.
+- Added explicit `aria-label`s to the "List Management" and "Log out" header buttons, matching the existing info button, so screen readers announce them correctly once their text labels collapse to icon-only on mobile.
+- `isHttpUrl`, `hasPhoto`, and `parseNextMaxId` moved out of `app.js` into a new `pure.mjs` module, with `app.js` now loaded as `<script type="module">` importing them. A minimal `package.json` (`"type": "module"`, no dependencies) was added so Node resolves the same `import` for testing.
+- Replaced every emoji icon (header Settings/Info/Log out, and the feed's Favourite/Reblog/View post buttons and "boosted" banner) with small inline flat SVG icons using `stroke="currentColor"`/`fill="currentColor"`, so they automatically pick up the surrounding text color — including the active/pressed state on the favourite and reblog buttons, and both themes — without needing separate light/dark image assets. Being inline markup rather than image files, they add effectively no extra page weight. Removed the now-unused `.icon-btn` CSS rules left over from the header buttons' earlier emoji-based styling.
+
+### Fixed
+
+- Logging out while viewing the About/Info page left it visible behind the login form, since the logout handler never hid it — every view-switching handler now goes through a single `showView()` helper that always hides all four views before showing one, so this whole class of "forgot to hide X" bug can't recur.
+- Renamed the login page's `.privacy-note` div to `.app-disclosure` — the old name matched generic cosmetic-filtering rules used by some content/ad blockers (notably on iOS Safari), which hid the whole section even though it's not a cookie/tracking notice at all.
+
+### Accessibility
+
+- Found and fixed several real WCAG contrast failures (measured, not eyeballed): `--text-tertiary` (2.85:1 in light mode), `--border-strong` on inputs/buttons (1.55:1), and white text on `--accent-active` (2.27:1) all fell short of the required 4.5:1 (text) / 3:1 (UI components) — all three now pass in both themes.
+- Added a visually-hidden `<h1>Mastofoto</h1>` in the header, giving every view a proper heading hierarchy starting from one `<h1>` (previously the page had none — headings jumped straight to `<h2>`).
+- `#list-select` had no accessible name at all (the "List" heading nearby isn't programmatically associated with it) — added a visually-hidden `<label>`.
+- The Favourite/Reblog buttons briefly had an `aria-label` ("Favourite"/"Reblog") added alongside their new SVG icons, which overrides an element's whole accessible name and so silently dropped the visible count from what's announced to screen readers. Replaced with a visually-hidden `.sr-only` label next to the visible count instead, so the announced name is "Favourite, 5" rather than just "Favourite".
+- Photo images lacking an author-provided description now get a fallback `alt` ("Photo without a description") instead of an empty one, so screen readers announce that a photo exists rather than skipping it entirely.
+- Error/status messages (`#login-error`, `#list-setup-error`, `#timeline-error`, `#no-list-message`) now use `role="alert"`/`aria-live="polite"` so they're announced automatically instead of requiring the user to find them manually.
+- The lightbox now has `role="dialog"`/`aria-modal="true"`, and moves focus to its close button on open and back to the triggering photo on close.
+- Split the brand blue from an accessible one: `#2b90d9` measured only ~3.45:1 as text/button-label color, so it's now reserved for non-text branding (the logo/favicon/`theme-color`) only. Links use a new `--link` token (`#1a6699` light / `#5aa9e6` dark — brighter in dark mode since a link's background is the page surface, which changes per theme), and solid buttons/the "New" badge/the active favourite-reblog state use `--btn-primary-bg` (`#1c69a0`, same in both themes since a button's own fill is its immediate background regardless of page theme). Both pass 4.5:1+ with their paired text color.
+
+
 ## [0.4.1] - 2026-08-29
 
 ### Security
