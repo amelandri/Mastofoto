@@ -3,7 +3,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
 (() => {
   'use strict';
 
-  const APP_VERSION = '0.4.1';
+  const APP_VERSION = '0.5.0';
   const REDIRECT_URI = window.location.origin + window.location.pathname;
   const SCOPES = 'read write:favourites write:statuses';
   const APP_NAME = 'Mastofoto';

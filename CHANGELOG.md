@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-31
+
 ### Added
 
 - **Dark theme**, switchable from a new "Theme" setting on the renamed Settings screen. Defaults to the OS/browser's `prefers-color-scheme` when no explicit choice has been saved; the pick persists in `localStorage` and applies instantly, including updating the mobile/PWA `theme-color`.
