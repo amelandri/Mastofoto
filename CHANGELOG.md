@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - The Settings screen's timeline picker now offers "Home timeline" as an option alongside your Mastodon lists — no extra permission needed, since it's covered by the same `read` scope already requested. Choosing it skips the list-members preview (there's no "membership" to show), and it's remembered per-instance for next time just like a list choice.
 
+### Changed
+
+- The post date now shows a 2-digit year (`31/08/26` instead of `31/08/2026`).
+- On mobile, the post date now sits on the same row as the author's username (right-aligned), the same layout already used on desktop, instead of wrapping onto its own full-width line below. The "New" badge follows the same change: it's back to sitting above the date in that column (aligned with the display name) rather than being pinned to the card's top-right corner. To guarantee the username never overlaps the date now that they share a row, `.username` gets a fixed width on mobile with a fade-to-transparent effect on truncated text, instead of the usual ellipsis.
+
 ### Fixed
 
 - Improved main menu icon positioning
