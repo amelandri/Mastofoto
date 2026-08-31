@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- A "Load failed" timeline error stayed on screen even after a subsequent load succeeded (e.g. pulling to refresh once the connection came back), because only `selectList()` cleared it — pull-to-refresh calls `loadTimeline()` directly and skipped that step. The error is now cleared at the top of `loadTimeline()` itself, so every caller is covered.
+
 ## [0.5.0] - 2026-08-31
 
 ### Added

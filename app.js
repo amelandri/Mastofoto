@@ -472,7 +472,6 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     state.currentListId = listId;
     state.nextMaxId = null;
     el.statuses.innerHTML = '';
-    hide(el.timelineError);
 
     await loadTimeline(false);
   }
@@ -481,6 +480,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
 
   async function loadTimeline(append) {
     try {
+      hide(el.timelineError);
       const path = `/api/v1/timelines/list/${state.currentListId}`;
       const params = new URLSearchParams({ limit: '20' });
       if (append && state.nextMaxId) params.set('max_id', state.nextMaxId);
