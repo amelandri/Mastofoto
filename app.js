@@ -3,7 +3,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
 (() => {
   'use strict';
 
-  const APP_VERSION = '0.5.0';
+  const APP_VERSION = '0.5.1';
   const REDIRECT_URI = window.location.origin + window.location.pathname;
   const SCOPES = 'read write:favourites write:statuses';
   const APP_NAME = 'Mastofoto';
@@ -472,7 +472,6 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     state.currentListId = listId;
     state.nextMaxId = null;
     el.statuses.innerHTML = '';
-    hide(el.timelineError);
 
     await loadTimeline(false);
   }
@@ -481,6 +480,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
 
   async function loadTimeline(append) {
     try {
+      hide(el.timelineError);
       const path = `/api/v1/timelines/list/${state.currentListId}`;
       const params = new URLSearchParams({ limit: '20' });
       if (append && state.nextMaxId) params.set('max_id', state.nextMaxId);
@@ -796,6 +796,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     }
 
     if (authError) {
+      showView(el.loginView);
       showError(el.loginError, `Authorization denied by the instance (${authError}).`);
       return;
     }
@@ -805,6 +806,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
         const handled = await completeAuthorization(code, returnedState);
         if (handled) return;
       } catch (err) {
+        showView(el.loginView);
         showError(el.loginError, err.message);
         return;
       }
@@ -817,11 +819,14 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
         el.instanceInput.value = lastInstance;
         try {
           await startSession(lastInstance, token);
+          return;
         } catch (err) {
           clearInstanceData(lastInstance);
         }
       }
     }
+
+    showView(el.loginView);
   })();
 
   if ('serviceWorker' in navigator) {
