@@ -228,19 +228,40 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
 
   // ---------- lightbox ----------
 
-  let lightboxTrigger = null;
+  const LIGHTBOX_SWIPE_THRESHOLD = 50;
 
-  function openLightbox(src, alt, triggerEl) {
-    el.lightboxImg.src = src;
-    el.lightboxImg.alt = alt || 'Photo without a description';
+  let lightboxTrigger = null;
+  let lightboxPhotos = [];
+  let lightboxIndex = 0;
+  let lightboxTouchStartX = null;
+  let lightboxTouchStartY = null;
+  let lightboxSwiping = false;
+
+  function openLightbox(photos, index, triggerEl) {
+    lightboxPhotos = photos;
     lightboxTrigger = triggerEl || document.activeElement;
+    showLightboxPhoto(index);
     show(el.lightbox);
     el.lightboxClose.focus();
+  }
+
+  function showLightboxPhoto(index) {
+    const photo = lightboxPhotos[index];
+    if (!photo) return;
+    lightboxIndex = index;
+    el.lightboxImg.src = photo.src;
+    el.lightboxImg.alt = photo.alt || 'Photo without a description';
+  }
+
+  function showAdjacentLightboxPhoto(direction) {
+    showLightboxPhoto(lightboxIndex + direction);
   }
 
   function closeLightbox() {
     hide(el.lightbox);
     el.lightboxImg.src = '';
+    lightboxPhotos = [];
+    lightboxIndex = 0;
     if (lightboxTrigger) lightboxTrigger.focus();
     lightboxTrigger = null;
   }
@@ -249,6 +270,38 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
   el.lightboxClose.addEventListener('click', closeLightbox);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeLightbox();
+    if (el.lightbox.classList.contains('hidden')) return;
+    if (e.key === 'ArrowRight') showAdjacentLightboxPhoto(1);
+    if (e.key === 'ArrowLeft') showAdjacentLightboxPhoto(-1);
+  });
+
+  el.lightbox.addEventListener('touchstart', (e) => {
+    if (lightboxPhotos.length < 2) return;
+    lightboxTouchStartX = e.touches[0].clientX;
+    lightboxTouchStartY = e.touches[0].clientY;
+    lightboxSwiping = false;
+  }, { passive: true });
+
+  el.lightbox.addEventListener('touchmove', (e) => {
+    if (lightboxTouchStartX === null) return;
+    const deltaX = e.touches[0].clientX - lightboxTouchStartX;
+    const deltaY = e.touches[0].clientY - lightboxTouchStartY;
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      lightboxSwiping = true;
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  el.lightbox.addEventListener('touchend', (e) => {
+    if (lightboxTouchStartX === null) return;
+    const deltaX = e.changedTouches[0].clientX - lightboxTouchStartX;
+    lightboxTouchStartX = null;
+    lightboxTouchStartY = null;
+    if (lightboxSwiping && Math.abs(deltaX) >= LIGHTBOX_SWIPE_THRESHOLD) {
+      e.preventDefault();
+      showAdjacentLightboxPhoto(deltaX < 0 ? 1 : -1);
+    }
+    lightboxSwiping = false;
   });
 
   // ---------- pull to refresh ----------
@@ -633,10 +686,15 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
     if (!original.media_attachments || !original.media_attachments.length) return null;
     const media = document.createElement('div');
     media.className = 'status-media';
+    const photos = original.media_attachments
+      .filter(att => att.type === 'image')
+      .map(att => ({ src: att.url || att.preview_url, alt: att.description }));
+    let photoIndex = 0;
     original.media_attachments.forEach(att => {
       if (att.type === 'image') {
         const img = document.createElement('img');
         const fullSrc = att.url || att.preview_url;
+        const index = photoIndex++;
         const dimensions = att.meta?.original || att.meta?.small;
         if (dimensions?.width && dimensions?.height) {
           img.width = dimensions.width;
@@ -655,11 +713,11 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
         img.tabIndex = 0;
         img.setAttribute('role', 'button');
         img.setAttribute('aria-label', att.description ? `View photo: ${att.description}` : 'View photo full size');
-        img.addEventListener('click', () => openLightbox(fullSrc, att.description, img));
+        img.addEventListener('click', () => openLightbox(photos, index, img));
         img.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            openLightbox(fullSrc, att.description, img);
+            openLightbox(photos, index, img);
           }
         });
         media.appendChild(img);
