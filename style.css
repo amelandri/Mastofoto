@@ -490,6 +490,13 @@ a.username:hover {
   line-height: 1.4;
 }
 
+img.emoji {
+  width: 1.2em;
+  height: 1.2em;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
 .status-content p {
   margin: 0 0 8px;
 }

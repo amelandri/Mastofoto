@@ -1,4 +1,4 @@
-import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
+import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from './pure.mjs';
 
 (() => {
   'use strict';
@@ -104,7 +104,16 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
 
   const ALLOWED_TAGS = new Set(['A', 'P', 'BR', 'SPAN', 'STRONG', 'B', 'EM', 'I', 'DEL', 'CODE', 'PRE', 'UL', 'OL', 'LI', 'BLOCKQUOTE']);
 
-  function sanitizeStatusHtml(html) {
+  function replaceEmojiShortcodes(textNode, emojis) {
+    if (!emojis.length) return;
+    const hasShortcode = emojis.some(emoji => emoji && emoji.shortcode && textNode.data.includes(`:${emoji.shortcode}:`));
+    if (!hasShortcode) return;
+    const wrapper = document.createElement('span');
+    wrapper.innerHTML = renderEmojiText(textNode.data, emojis);
+    textNode.replaceWith(...wrapper.childNodes);
+  }
+
+  function sanitizeStatusHtml(html, emojis = []) {
     const doc = new DOMParser().parseFromString(html || '', 'text/html');
     const walk = (node) => {
       [...node.childNodes].forEach(child => {
@@ -130,7 +139,9 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
             if (isHashtag) child.classList.add('tag-link');
           }
           walk(child);
-        } else if (child.nodeType !== Node.TEXT_NODE) {
+        } else if (child.nodeType === Node.TEXT_NODE) {
+          replaceEmojiShortcodes(child, emojis);
+        } else {
           node.removeChild(child);
         }
       });
@@ -406,7 +417,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
       show(el.listMembersHeading);
       accounts.forEach(account => {
         const item = document.createElement('li');
-        const name = escapeHtml(account.display_name || account.username);
+        const name = renderEmojiText(account.display_name || account.username, account.emojis);
         item.innerHTML = `
           <img src="${escapeAttr(account.avatar)}" alt="">
           ${account.url && isHttpUrl(account.url)
@@ -679,13 +690,13 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     if (isReblog) {
       const banner = document.createElement('div');
       banner.className = 'reblog-banner';
-      banner.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span>${escapeHtml(status.account.display_name || status.account.username)} boosted`;
+      banner.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span>${renderEmojiText(status.account.display_name || status.account.username, status.account.emojis)} boosted`;
       card.appendChild(banner);
     }
 
     const profileUrl = original.account.url;
     const profileIsSafe = !!(profileUrl && isHttpUrl(profileUrl));
-    const displayName = escapeHtml(original.account.display_name || original.account.username);
+    const displayName = renderEmojiText(original.account.display_name || original.account.username, original.account.emojis);
     const avatarImg = `<img src="${escapeAttr(original.account.avatar)}" alt="">`;
 
     const header = document.createElement('div');
@@ -710,19 +721,19 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     if (original.spoiler_text) {
       const cw = document.createElement('details');
       const summary = document.createElement('summary');
-      summary.textContent = original.spoiler_text;
+      summary.innerHTML = renderEmojiText(original.spoiler_text, original.emojis);
       cw.appendChild(summary);
       if (media) cw.appendChild(media);
       const content = document.createElement('div');
       content.className = 'status-content';
-      content.innerHTML = sanitizeStatusHtml(original.content);
+      content.innerHTML = sanitizeStatusHtml(original.content, original.emojis);
       cw.appendChild(content);
       card.appendChild(cw);
     } else {
       if (media) card.appendChild(media);
       const content = document.createElement('div');
       content.className = 'status-content';
-      content.innerHTML = sanitizeStatusHtml(original.content);
+      content.innerHTML = sanitizeStatusHtml(original.content, original.emojis);
       card.appendChild(content);
     }
 
@@ -790,10 +801,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
   function show(elem) { elem.classList.remove('hidden'); }
   function hide(elem) { elem.classList.add('hidden'); }
   function showError(elem, msg) { elem.textContent = msg; show(elem); }
-  function escapeHtml(str) {
-    return (str || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
-  function escapeAttr(str) { return escapeHtml(str); }
+  const escapeAttr = escapeHtml;
 
   // ---------- bootstrap ----------
 
