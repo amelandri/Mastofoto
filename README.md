@@ -20,13 +20,14 @@ A static web app that shows only the photo posts from one Mastodon list, letting
 
 - A Mastodon account with at least one list already created, containing the accounts you want to follow
 - A modern browser
-- The app must be served from a stable `http(s)://` URL — opening `index.html` directly as a `file://` page does not work, since Mastodon's OAuth flow (and some browsers' `fetch()` restrictions) require a real origin. There is no build step and no dependencies to install; you just need somewhere to serve the static files from. Two common options, both covered below:
+- The app must be served from a stable `http(s)://` URL — opening `index.html` directly as a `file://` page does not work, since Mastodon's OAuth flow (and some browsers' `fetch()` restrictions) require a real origin. There is no build step and no dependencies to install; you just need somewhere to serve the static files from — or skip hosting entirely and use the maintainer's own instance. Three options, all covered below:
   - **GitHub Pages** — free, no server of your own to maintain, requires forking this repo
   - **Self-hosted** — any static web server you already control
+  - **The maintainer's hosted instance** — nothing to set up at all
 
 ## Getting started
 
-Pick one hosting route, then jump to [Using the app](#using-the-app) once it's live.
+Pick one option, then jump to [Using the app](#using-the-app) once it's live.
 
 ### Option A — GitHub Pages (fork this repo)
 
@@ -48,6 +49,12 @@ Pick one hosting route, then jump to [Using the app](#using-the-app) once it's l
    - A real server: any web server capable of serving static files (nginx, Apache, Caddy, etc.) pointed at the folder.
 3. Use HTTPS for anything beyond local testing — most Mastodon instances and browsers expect it (e.g. via a reverse proxy like Caddy or nginx+certbot). There's no `CNAME`-style gotcha here (that's GitHub Pages-specific); just make sure the URL you settle on is one you intend to keep using, since [how authentication works](#how-authentication-works) below ties your login to that exact origin.
 4. Open that URL in a browser.
+
+### Option C — Use the maintainer's hosted instance
+
+1. Open [`https://mastofoto.melandri.net/`](https://mastofoto.melandri.net/) — this is the maintainer's own deployment of this exact repo, kept up to date, with nothing to fork, configure, or host yourself.
+
+> **Note:** this specific deployment runs basic, privacy-friendly analytics (Umami) to see approximate visit counts — see [Data & privacy](#data--privacy) below. It only records anonymous page views, never anything from your Mastodon account, list, or activity, so it doesn't compromise your privacy in any way. If you'd rather avoid analytics entirely, use Option A or B instead — the code in this repository, as described there, carries none.
 
 ## Using the app
 
