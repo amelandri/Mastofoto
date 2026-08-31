@@ -445,6 +445,7 @@ a.member-name:hover {
 
 .status-author .display-name {
   font-weight: 600;
+  margin-bottom: 3px;
 }
 
 .status-author .display-name a{
@@ -456,6 +457,7 @@ a.member-name:hover {
   color: var(--text-secondary);
   font-size: 0.85rem;
   text-decoration: none;
+  margin-top: 2px;
 }
 
 a.username:hover {
@@ -469,12 +471,14 @@ a.username:hover {
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
+  
 }
 
 .status-date {
   color: var(--text-tertiary);
   font-size: 0.8rem;
   white-space: nowrap;
+  margin-top:7px;
 }
 
 .status-content {
@@ -659,12 +663,16 @@ a.username:hover {
 
   .status-author .username {
     display: block;
-    width: 90px;
+    width: 190px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: clip;
     -webkit-mask-image: linear-gradient(to right, black calc(100% - 20px), transparent 100%);
     mask-image: linear-gradient(to right, black calc(100% - 20px), transparent 100%);
+  }
+
+  .status-date {
+    margin-top:14px;
   }
 
 }
