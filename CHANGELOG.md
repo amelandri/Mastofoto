@@ -14,12 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - The post date now shows a 2-digit year (`31/08/26` instead of `31/08/2026`).
 - On mobile, the post date now sits on the same row as the author's username (right-aligned), the same layout already used on desktop, instead of wrapping onto its own full-width line below. To guarantee the username never overlaps the date now that they share a row, `.username` gets a fixed width on mobile with a fade-to-transparent effect on truncated text, instead of the usual ellipsis. The "New" badge keeps its own separate behavior: pinned to the card's top-right corner regardless of the header's content, same as before — only the date moved.
-
-
-### Fixed
-
-- Improved main menu icon positioning
-- Improvements to text positioning in status header
+- Various Improvements to icons and text positioning
 
 ## [0.5.1] - 2026-08-31
 
