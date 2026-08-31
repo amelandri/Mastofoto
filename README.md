@@ -20,11 +20,38 @@ A static web app that shows only the photo posts from one Mastodon list, letting
 
 - A Mastodon account with at least one list already created, containing the accounts you want to follow
 - A modern browser
-- The app must be served from a stable `http(s)://` URL (e.g. GitHub Pages) — opening `index.html` directly as a `file://` page does not work, since Mastodon's OAuth flow (and some browsers' `fetch()` restrictions) require a real origin
+- The app must be served from a stable `http(s)://` URL — opening `index.html` directly as a `file://` page does not work, since Mastodon's OAuth flow (and some browsers' `fetch()` restrictions) require a real origin. There is no build step and no dependencies to install; you just need somewhere to serve the static files from. Two common options, both covered below:
+  - **GitHub Pages** — free, no server of your own to maintain, requires forking this repo
+  - **Self-hosted** — any static web server you already control
 
 ## Getting started
 
-1. Open the app at its hosted URL (e.g. `https://<username>.github.io/<repo>/`).
+Pick one hosting route, then jump to [Using the app](#using-the-app) once it's live.
+
+### Option A — GitHub Pages (fork this repo)
+
+1. **Fork** this repository to your own GitHub account (button top-right on the repo page).
+2. **Deal with the `CNAME` file before enabling Pages.** This repo ships a root-level `CNAME` file pointing at the maintainer's own domain (`mastofoto.melandri.net`) — it's what makes *their* deployment reachable at that custom address instead of a `github.io` URL. Your fork inherits this file as-is, and you don't own that domain, so:
+   - **Delete `CNAME`** if you just want the default address — your fork will then be served at `https://<your-username>.github.io/<repo>/`. This is the right choice for almost everyone.
+   - **Replace its single line** with a domain of your own, only if you actually have one and have already pointed it at GitHub Pages via a DNS `CNAME`/`ALIAS` record.
+
+   Leaving the maintainer's domain in place doesn't stop your fork's default `github.io` URL from working, but *Settings → Pages* will keep trying to verify a domain you don't control — it'll show as unverified/failing and can block enabling "Enforce HTTPS".
+3. In your fork: **Settings → Pages → Build and deployment → Source: Deploy from a branch**, then pick the branch you want live (`main`) and `/ (root)`, and save.
+4. Wait a minute for the first build; the live URL appears at the top of that same Settings → Pages screen once it's ready (your `github.io` URL, or your own domain if you set one up in step 2).
+5. Open that URL in a browser.
+
+### Option B — Self-hosted (your own server)
+
+1. Get the files onto a machine you control — clone the repo (or download/copy `index.html`, `style.css`, `app.js`, `pure.mjs`, `sw.js`, `manifest.json`, and `assets/`). No build step, no `npm install` needed.
+2. Serve that directory with any static file server, over `http(s)://`. A few examples:
+   - Quick local testing: `python3 -m http.server` from inside the folder, then open `http://localhost:8000/`.
+   - A real server: any web server capable of serving static files (nginx, Apache, Caddy, etc.) pointed at the folder.
+3. Use HTTPS for anything beyond local testing — most Mastodon instances and browsers expect it (e.g. via a reverse proxy like Caddy or nginx+certbot). There's no `CNAME`-style gotcha here (that's GitHub Pages-specific); just make sure the URL you settle on is one you intend to keep using, since [how authentication works](#how-authentication-works) below ties your login to that exact origin.
+4. Open that URL in a browser.
+
+## Using the app
+
+1. Open the app at its hosted URL (from either option above).
 2. Enter your instance domain (e.g. `mastodon.uno`) and click **Connect**. You'll be redirected to your instance to approve access, then sent straight back.
 3. Choose which list to use — the app remembers it for next time.
 4. Browse, favourite, and boost the photo posts from that list. Use **Settings** anytime to switch lists or change the theme.
@@ -33,9 +60,7 @@ A static web app that shows only the photo posts from one Mastodon list, letting
 
 Mastofoto registers itself as an OAuth app on your instance the first time you connect, then redirects you to your instance's authorization page and back to the app's own URL (whatever URL it's currently served from) once you approve. It requests only the `read`, `write:favourites`, and `write:statuses` scopes — it cannot post new statuses.
 
-## Hosting
-
-Since the app must be served over `http(s)://`, the simplest option is a free static host such as GitHub Pages: push this repository, then enable Pages in the repo settings (*Settings → Pages → Deploy from a branch → `main` / root*). No build step or server configuration is needed — the app adapts its OAuth redirect URL automatically to wherever it's hosted.
+Because the app registers itself against the exact URL it's served from, changing that URL later (a different domain, adding/removing the `CNAME`, moving from `github.io` to a custom domain, switching self-hosting providers, etc.) invalidates the previous registration — you'll need to log in again from the new URL.
 
 ## Data & privacy
 
