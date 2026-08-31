@@ -796,6 +796,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     }
 
     if (authError) {
+      showView(el.loginView);
       showError(el.loginError, `Authorization denied by the instance (${authError}).`);
       return;
     }
@@ -805,6 +806,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
         const handled = await completeAuthorization(code, returnedState);
         if (handled) return;
       } catch (err) {
+        showView(el.loginView);
         showError(el.loginError, err.message);
         return;
       }
@@ -817,11 +819,14 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
         el.instanceInput.value = lastInstance;
         try {
           await startSession(lastInstance, token);
+          return;
         } catch (err) {
           clearInstanceData(lastInstance);
         }
       }
     }
+
+    showView(el.loginView);
   })();
 
   if ('serviceWorker' in navigator) {
