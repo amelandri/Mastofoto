@@ -139,12 +139,17 @@ body {
   margin-top: 0px;
 }
 
+.reblog-banner .btn-icon {
+  margin-top: 0px;
+}
+
 .reblog-banner .btn-icon svg {
   width: 13px;
   height: 13px;
   display: block;
   stroke-width: 3;
   color: var(--link);
+  margin-top: 1px;
 }
 
 .hidden {
@@ -470,15 +475,14 @@ a.username:hover {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
-  
+  margin-top: -5px;
 }
 
 .status-date {
   color: var(--text-tertiary);
   font-size: 0.8rem;
   white-space: nowrap;
-  margin-top:7px;
+  margin-top: 5px;
 }
 
 .status-content {
@@ -661,18 +665,43 @@ a.username:hover {
     margin-bottom: 20px;
   }
 
+  .status-author .display-name {
+    margin-bottom: 5px;
+  }
+
   .status-author .username {
     display: block;
-    width: 190px;
+    width: 185px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: clip;
     -webkit-mask-image: linear-gradient(to right, black calc(100% - 20px), transparent 100%);
     mask-image: linear-gradient(to right, black calc(100% - 20px), transparent 100%);
+    font-size: 0.8rem;
   }
 
+  .status-meta {
+    margin-top: -4px;
+  }
+
+
   .status-date {
-    margin-top:14px;
+    margin-top:4px;
+    font-size: 0.8rem;
+  }
+
+  .status-card {
+    position: relative;
+  }
+
+  .status-card.is-new .status-header {
+    padding-right: 60px;
+  }
+
+  .new-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
   }
 
 }
