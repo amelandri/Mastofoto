@@ -10,6 +10,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
   const PENDING_INSTANCE_KEY = 'mastofoto:pendingInstance';
   const PENDING_STATE_KEY = 'mastofoto:pendingState';
   const THEME_KEY = 'mastofoto:theme';
+  const HOME_TIMELINE_ID = 'home';
 
   // ---------- theme ----------
 
@@ -380,8 +381,17 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
   });
 
   el.listSelect.addEventListener('change', () => {
-    if (el.listSelect.value) loadListMembers(el.listSelect.value);
+    updateListPreview(el.listSelect.value);
   });
+
+  function updateListPreview(listId) {
+    if (!listId || listId === HOME_TIMELINE_ID) {
+      el.listMembers.innerHTML = '';
+      hide(el.listMembersHeading);
+      return;
+    }
+    return loadListMembers(listId);
+  }
 
   async function loadListMembers(listId) {
     el.listMembers.innerHTML = '';
@@ -441,28 +451,28 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     el.listMembers.innerHTML = '';
     showView(el.listSetupView);
 
+    const homeOption = document.createElement('option');
+    homeOption.value = HOME_TIMELINE_ID;
+    homeOption.textContent = 'Home timeline';
+    el.listSelect.appendChild(homeOption);
+
     try {
       const res = await apiFetch(state.instance, state.token, '/api/v1/lists');
       const lists = await res.json();
 
       if (!lists.length) {
         show(el.noListMessage);
-        el.listSelect.classList.add('hidden');
-        el.useListBtn.classList.add('hidden');
-        return;
+      } else {
+        lists.forEach(list => {
+          const option = document.createElement('option');
+          option.value = list.id;
+          option.textContent = list.title;
+          el.listSelect.appendChild(option);
+        });
       }
-      el.listSelect.classList.remove('hidden');
-      el.useListBtn.classList.remove('hidden');
 
-      lists.forEach(list => {
-        const option = document.createElement('option');
-        option.value = list.id;
-        option.textContent = list.title;
-        if (preselectListId && String(preselectListId) === String(list.id)) option.selected = true;
-        el.listSelect.appendChild(option);
-      });
-
-      if (el.listSelect.value) await loadListMembers(el.listSelect.value);
+      if (preselectListId) el.listSelect.value = String(preselectListId);
+      await updateListPreview(el.listSelect.value);
     } catch (err) {
       showError(el.listSetupError, err.message);
     }
@@ -481,7 +491,9 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
   async function loadTimeline(append) {
     try {
       hide(el.timelineError);
-      const path = `/api/v1/timelines/list/${state.currentListId}`;
+      const path = state.currentListId === HOME_TIMELINE_ID
+        ? '/api/v1/timelines/home'
+        : `/api/v1/timelines/list/${state.currentListId}`;
       const params = new URLSearchParams({ limit: '20' });
       if (append && state.nextMaxId) params.set('max_id', state.nextMaxId);
 

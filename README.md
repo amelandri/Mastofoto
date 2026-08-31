@@ -1,13 +1,13 @@
 # Mastofoto
 
-A static web app that shows only the photo posts from one Mastodon list, letting you favourite and reblog them — no backend, no database, runs entirely in the browser.
+A static web app that shows only the photo posts from one Mastodon list — or your Home timeline — letting you favourite and reblog them — no backend, no database, runs entirely in the browser.
 
 > **Built with vibe coding.** This project is developed almost entirely through conversational, natural-language prompting with an AI coding assistant (Claude Code) rather than traditional hand-written development. Features, fixes, and refactors are driven by iterative requests rather than a fixed upfront design — keep that in mind if you're reading the code, reviewing a change, or reporting an issue.
 
 ## Features
 
 - Login via Mastodon OAuth, with the app registering itself on your instance automatically (no server-side redirect needed)
-- Configure which Mastodon list to follow, preview its members, and switch it later
+- Configure which Mastodon list to follow (with a preview of its members) or use your Home timeline instead, and switch anytime
 - Shows only posts (and boosts) that contain photos, at full resolution, with a click-to-enlarge lightbox
 - Favourite (⭐), reblog (🔁), and jump to the original post directly from the feed
 - New posts highlighted since your last visit
@@ -18,7 +18,7 @@ A static web app that shows only the photo posts from one Mastodon list, letting
 
 ## Requirements
 
-- A Mastodon account with at least one list already created, containing the accounts you want to follow
+- A Mastodon account — a list isn't required, since you can follow your Home timeline instead, but a small curated list (with the accounts you want to follow) usually makes for a more focused photo feed
 - A modern browser
 - The app must be served from a stable `http(s)://` URL — opening `index.html` directly as a `file://` page does not work, since Mastodon's OAuth flow (and some browsers' `fetch()` restrictions) require a real origin. There is no build step and no dependencies to install; you just need somewhere to serve the static files from — or skip hosting entirely and use the maintainer's own instance. Three options, all covered below:
   - **GitHub Pages** — free, no server of your own to maintain, requires forking this repo
@@ -60,8 +60,8 @@ Pick one option, then jump to [Using the app](#using-the-app) once it's live.
 
 1. Open the app at its hosted URL (from either option above).
 2. Enter your instance domain (e.g. `mastodon.uno`) and click **Connect**. You'll be redirected to your instance to approve access, then sent straight back.
-3. Choose which list to use — the app remembers it for next time.
-4. Browse, favourite, and boost the photo posts from that list. Use **Settings** anytime to switch lists or change the theme.
+3. Choose which timeline to follow — a specific list, or your Home timeline — the app remembers it for next time.
+4. Browse, favourite, and boost the photo posts from there. Use **Settings** anytime to switch timelines or change the theme.
 
 ## How authentication works
 
@@ -71,7 +71,7 @@ Because the app registers itself against the exact URL it's served from, changin
 
 ## Data & privacy
 
-There is no server behind this app, so no server ever stores any of your data. Everything (app credentials, access token, chosen list) is stored only in your own browser's `localStorage`, scoped per Mastodon instance, and never leaves your machine except in requests sent directly to your chosen Mastodon instance. This is also stated as a notice on the login page. Because there's no backend, the OAuth client secret is visible in the browser — acceptable for personal use, but don't treat it as a secret.
+There is no server behind this app, so no server ever stores any of your data. Everything (app credentials, access token, chosen timeline) is stored only in your own browser's `localStorage`, scoped per Mastodon instance, and never leaves your machine except in requests sent directly to your chosen Mastodon instance. This is also stated as a notice on the login page. Because there's no backend, the OAuth client secret is visible in the browser — acceptable for personal use, but don't treat it as a secret.
 
 Some deployments of Mastofoto (including the maintainer's own) may run basic, privacy-friendly analytics (e.g. Umami) to see approximate visit counts. This only records anonymous page views, never anything from your Mastodon account or activity — and the code in this repository, as described here, carries none of it.
 
@@ -84,7 +84,7 @@ Some deployments of Mastofoto (including the maintainer's own) may run basic, pr
 
 ## Limitations
 
-- Single list at a time — not a general-purpose Mastodon client
+- Single timeline at a time (a list or your Home timeline) — not a general-purpose Mastodon client
 - No posting/composing new statuses
 - Photo filtering happens client-side after fetching a page of the timeline, so **Load more** may need a few clicks on quiet lists
 
