@@ -491,8 +491,8 @@ a.username:hover {
 }
 
 img.emoji {
-  width: 1.2em;
-  height: 1.2em;
+  width: 1.2em !important;
+  height: 1.2em !important;
   object-fit: contain;
   vertical-align: middle;
 }
