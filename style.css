@@ -112,6 +112,7 @@ body {
 
 .btn-icon {
   margin-right: 6px;
+  margin-top: -2px;
   opacity: 0.7;
   display: inline-flex;
   vertical-align: middle;
@@ -121,6 +122,10 @@ body {
   width: 16px;
   height: 16px;
   display: block;
+}
+
+.status-actions .btn-icon{
+  margin-top: 0;
 }
 
 .status-actions .btn-icon svg {
