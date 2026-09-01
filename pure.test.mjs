@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
+import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from './pure.mjs';
 
 test('isHttpUrl accepts http(s) URLs', () => {
   assert.equal(isHttpUrl('https://example.com/foo'), true);
@@ -53,4 +53,26 @@ test('parseNextMaxId falls back to the last status id when there is no next Link
 
 test('parseNextMaxId returns null when there is nothing to page from', () => {
   assert.equal(parseNextMaxId(null, []), null);
+});
+
+test('escapeHtml escapes all five special characters', () => {
+  assert.equal(escapeHtml(`<script>alert("x") & 'y'</script>`), '&lt;script&gt;alert(&quot;x&quot;) &amp; &#39;y&#39;&lt;/script&gt;');
+});
+
+test('renderEmojiText replaces a known shortcode with an <img>, leaving the rest escaped', () => {
+  const emojis = [{ shortcode: 'verified_breze', url: 'https://instance.example/emoji/breze.png' }];
+  const html = renderEmojiText('<b>Bakery</b> :verified_breze: HQ', emojis);
+  assert.equal(
+    html,
+    '&lt;b&gt;Bakery&lt;/b&gt; <img class="emoji" src="https://instance.example/emoji/breze.png" alt=":verified_breze:" title=":verified_breze:" loading="lazy"> HQ'
+  );
+});
+
+test('renderEmojiText leaves an unknown shortcode as plain escaped text', () => {
+  assert.equal(renderEmojiText('hello :not_a_real_emoji:', []), 'hello :not_a_real_emoji:');
+});
+
+test('renderEmojiText ignores an emoji entry with a non-http(s) url (regression guard)', () => {
+  const emojis = [{ shortcode: 'evil', url: 'javascript:alert(1)' }];
+  assert.equal(renderEmojiText(':evil:', emojis), ':evil:');
 });

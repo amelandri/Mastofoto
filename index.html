@@ -35,7 +35,7 @@
 
   <section id="login-view" class="hidden">
     <div class="card">
-      <p class="intro"><strong>Transform a Mastodon list, in a beatiful clean photo feed!</strong><br /><br />Mastofoto shows you the posts from one of your Mastodon lists, but only the ones that include a photo: every text-only post is filtered out.
+      <p class="intro"><strong>Transform a Mastodon list, or your Home timeline, into a beatiful clean photo feed!</strong><br /><br />Mastofoto shows you the posts from one of your Mastodon lists (or your Home timeline), but only the ones that include a photo: every text-only post is filtered out.
       <br /><br />Connect your account, pick a list, and favourite or boost photos right from the feed.
       <br /><br />Follow the project on Mastodon: <a href="https://mastodon.uno/@mastofoto" target="_blank" rel="noopener noreferrer">@mastofoto@mastodon.uno</a></p>
 
@@ -68,14 +68,14 @@
       </div>
 
       <div class="settings-section">
-        <h3>List</h3>
-        <label for="list-select" class="sr-only">List</label>
+        <h3>Timeline</h3>
+        <label for="list-select" class="sr-only">Timeline</label>
         <div class="form-row">
           <select id="list-select"></select>
-          <button id="use-list-btn">Use this list</button>
+          <button id="use-list-btn">Use this timeline</button>
         </div>
         <p id="list-setup-error" class="error hidden" role="alert"></p>
-        <p id="no-list-message" class="hint hidden" aria-live="polite">No lists found. Create a list on Mastodon and add the accounts you want to follow to it.</p>
+        <p id="no-list-message" class="hint hidden" aria-live="polite">No lists found — you can still follow your Home timeline, or create a list on Mastodon with the accounts you want to follow.</p>
         <h4 id="list-members-heading" class="hint hidden">Members</h4>
         <ul id="list-members"></ul>
       </div>
@@ -103,7 +103,7 @@
         <a href="." class="home-link">← Home Page</a>
       </div>
       <p class="version-tag">Version <span id="app-version"></span></p>
-      <p>Mastofoto shows you the posts from one of your Mastodon lists, but only the ones that include a photo — every text-only post is filtered out. Connect your account, pick a list, and favourite or boost photos right from the feed.</p>
+      <p>Mastofoto shows you the posts from one of your Mastodon lists (or your Home timeline), but only the ones that include a photo — every text-only post is filtered out. Connect your account, pick a timeline, and favourite or boost photos right from the feed.</p>
 
       <h3>Self hosting</h3>
 
@@ -113,7 +113,7 @@
       <h3>Features</h3>
       <ul>
         <li>Log in with any Mastodon instance — no server-side setup required</li>
-        <li>Choose which list to follow, with a preview of its members</li>
+        <li>Choose which list to follow (with a preview of its members), or use your Home timeline instead</li>
         <li>See only posts (and boosts) containing photos, at full resolution</li>
         <li>Favourite, reblog, and jump to the original post directly from the feed</li>
         <li>New posts are highlighted since your last visit</li>

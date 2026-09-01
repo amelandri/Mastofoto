@@ -1,15 +1,29 @@
-import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
+import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from './pure.mjs';
 
 (() => {
   'use strict';
 
-  const APP_VERSION = '0.5.1';
+  const APP_VERSION = '0.5.2';
   const REDIRECT_URI = window.location.origin + window.location.pathname;
   const SCOPES = 'read write:favourites write:statuses';
   const APP_NAME = 'Mastofoto';
   const PENDING_INSTANCE_KEY = 'mastofoto:pendingInstance';
   const PENDING_STATE_KEY = 'mastofoto:pendingState';
   const THEME_KEY = 'mastofoto:theme';
+  const HOME_TIMELINE_ID = 'home';
+
+  // crypto.randomUUID() requires a secure context (HTTPS, or http://localhost)
+  // and is undefined otherwise — e.g. testing on a phone over a plain
+  // http://<lan-ip> origin. crypto.getRandomValues() has no such restriction,
+  // so fall back to building a v4 UUID from it by hand when needed.
+  function randomUUID() {
+    if (crypto.randomUUID) return crypto.randomUUID();
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = [...bytes].map(b => b.toString(16).padStart(2, '0'));
+    return `${hex.slice(0, 4).join('')}-${hex.slice(4, 6).join('')}-${hex.slice(6, 8).join('')}-${hex.slice(8, 10).join('')}-${hex.slice(10, 16).join('')}`;
+  }
 
   // ---------- theme ----------
 
@@ -103,7 +117,16 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
 
   const ALLOWED_TAGS = new Set(['A', 'P', 'BR', 'SPAN', 'STRONG', 'B', 'EM', 'I', 'DEL', 'CODE', 'PRE', 'UL', 'OL', 'LI', 'BLOCKQUOTE']);
 
-  function sanitizeStatusHtml(html) {
+  function replaceEmojiShortcodes(textNode, emojis) {
+    if (!emojis.length) return;
+    const hasShortcode = emojis.some(emoji => emoji && emoji.shortcode && textNode.data.includes(`:${emoji.shortcode}:`));
+    if (!hasShortcode) return;
+    const wrapper = document.createElement('span');
+    wrapper.innerHTML = renderEmojiText(textNode.data, emojis);
+    textNode.replaceWith(...wrapper.childNodes);
+  }
+
+  function sanitizeStatusHtml(html, emojis = []) {
     const doc = new DOMParser().parseFromString(html || '', 'text/html');
     const walk = (node) => {
       [...node.childNodes].forEach(child => {
@@ -129,7 +152,9 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
             if (isHashtag) child.classList.add('tag-link');
           }
           walk(child);
-        } else if (child.nodeType !== Node.TEXT_NODE) {
+        } else if (child.nodeType === Node.TEXT_NODE) {
+          replaceEmojiShortcodes(child, emojis);
+        } else {
           node.removeChild(child);
         }
       });
@@ -154,7 +179,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
 
   function formatStatusDate(dateStr) {
     return new Date(dateStr).toLocaleString('en-GB', {
-      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+      day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit',
     });
   }
 
@@ -216,19 +241,40 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
 
   // ---------- lightbox ----------
 
-  let lightboxTrigger = null;
+  const LIGHTBOX_SWIPE_THRESHOLD = 50;
 
-  function openLightbox(src, alt, triggerEl) {
-    el.lightboxImg.src = src;
-    el.lightboxImg.alt = alt || 'Photo without a description';
+  let lightboxTrigger = null;
+  let lightboxPhotos = [];
+  let lightboxIndex = 0;
+  let lightboxTouchStartX = null;
+  let lightboxTouchStartY = null;
+  let lightboxSwiping = false;
+
+  function openLightbox(photos, index, triggerEl) {
+    lightboxPhotos = photos;
     lightboxTrigger = triggerEl || document.activeElement;
+    showLightboxPhoto(index);
     show(el.lightbox);
     el.lightboxClose.focus();
+  }
+
+  function showLightboxPhoto(index) {
+    const photo = lightboxPhotos[index];
+    if (!photo) return;
+    lightboxIndex = index;
+    el.lightboxImg.src = photo.src;
+    el.lightboxImg.alt = photo.alt || 'Photo without a description';
+  }
+
+  function showAdjacentLightboxPhoto(direction) {
+    showLightboxPhoto(lightboxIndex + direction);
   }
 
   function closeLightbox() {
     hide(el.lightbox);
     el.lightboxImg.src = '';
+    lightboxPhotos = [];
+    lightboxIndex = 0;
     if (lightboxTrigger) lightboxTrigger.focus();
     lightboxTrigger = null;
   }
@@ -237,6 +283,38 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
   el.lightboxClose.addEventListener('click', closeLightbox);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeLightbox();
+    if (el.lightbox.classList.contains('hidden')) return;
+    if (e.key === 'ArrowRight') showAdjacentLightboxPhoto(1);
+    if (e.key === 'ArrowLeft') showAdjacentLightboxPhoto(-1);
+  });
+
+  el.lightbox.addEventListener('touchstart', (e) => {
+    if (lightboxPhotos.length < 2) return;
+    lightboxTouchStartX = e.touches[0].clientX;
+    lightboxTouchStartY = e.touches[0].clientY;
+    lightboxSwiping = false;
+  }, { passive: true });
+
+  el.lightbox.addEventListener('touchmove', (e) => {
+    if (lightboxTouchStartX === null) return;
+    const deltaX = e.touches[0].clientX - lightboxTouchStartX;
+    const deltaY = e.touches[0].clientY - lightboxTouchStartY;
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      lightboxSwiping = true;
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  el.lightbox.addEventListener('touchend', (e) => {
+    if (lightboxTouchStartX === null) return;
+    const deltaX = e.changedTouches[0].clientX - lightboxTouchStartX;
+    lightboxTouchStartX = null;
+    lightboxTouchStartY = null;
+    if (lightboxSwiping && Math.abs(deltaX) >= LIGHTBOX_SWIPE_THRESHOLD) {
+      e.preventDefault();
+      showAdjacentLightboxPhoto(deltaX < 0 ? 1 : -1);
+    }
+    lightboxSwiping = false;
   });
 
   // ---------- pull to refresh ----------
@@ -322,7 +400,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
       }
       const app = await registerApp(instance);
       saveInstanceData(instance, { clientId: app.client_id, clientSecret: app.client_secret });
-      const csrfState = crypto.randomUUID();
+      const csrfState = randomUUID();
       localStorage.setItem(PENDING_INSTANCE_KEY, instance);
       localStorage.setItem(PENDING_STATE_KEY, csrfState);
 
@@ -380,8 +458,17 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
   });
 
   el.listSelect.addEventListener('change', () => {
-    if (el.listSelect.value) loadListMembers(el.listSelect.value);
+    updateListPreview(el.listSelect.value);
   });
+
+  function updateListPreview(listId) {
+    if (!listId || listId === HOME_TIMELINE_ID) {
+      el.listMembers.innerHTML = '';
+      hide(el.listMembersHeading);
+      return;
+    }
+    return loadListMembers(listId);
+  }
 
   async function loadListMembers(listId) {
     el.listMembers.innerHTML = '';
@@ -396,7 +483,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
       show(el.listMembersHeading);
       accounts.forEach(account => {
         const item = document.createElement('li');
-        const name = escapeHtml(account.display_name || account.username);
+        const name = renderEmojiText(account.display_name || account.username, account.emojis);
         item.innerHTML = `
           <img src="${escapeAttr(account.avatar)}" alt="">
           ${account.url && isHttpUrl(account.url)
@@ -441,28 +528,28 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     el.listMembers.innerHTML = '';
     showView(el.listSetupView);
 
+    const homeOption = document.createElement('option');
+    homeOption.value = HOME_TIMELINE_ID;
+    homeOption.textContent = 'Home timeline';
+    el.listSelect.appendChild(homeOption);
+
     try {
       const res = await apiFetch(state.instance, state.token, '/api/v1/lists');
       const lists = await res.json();
 
       if (!lists.length) {
         show(el.noListMessage);
-        el.listSelect.classList.add('hidden');
-        el.useListBtn.classList.add('hidden');
-        return;
+      } else {
+        lists.forEach(list => {
+          const option = document.createElement('option');
+          option.value = list.id;
+          option.textContent = list.title;
+          el.listSelect.appendChild(option);
+        });
       }
-      el.listSelect.classList.remove('hidden');
-      el.useListBtn.classList.remove('hidden');
 
-      lists.forEach(list => {
-        const option = document.createElement('option');
-        option.value = list.id;
-        option.textContent = list.title;
-        if (preselectListId && String(preselectListId) === String(list.id)) option.selected = true;
-        el.listSelect.appendChild(option);
-      });
-
-      if (el.listSelect.value) await loadListMembers(el.listSelect.value);
+      if (preselectListId) el.listSelect.value = String(preselectListId);
+      await updateListPreview(el.listSelect.value);
     } catch (err) {
       showError(el.listSetupError, err.message);
     }
@@ -481,7 +568,9 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
   async function loadTimeline(append) {
     try {
       hide(el.timelineError);
-      const path = `/api/v1/timelines/list/${state.currentListId}`;
+      const path = state.currentListId === HOME_TIMELINE_ID
+        ? '/api/v1/timelines/home'
+        : `/api/v1/timelines/list/${state.currentListId}`;
       const params = new URLSearchParams({ limit: '20' });
       if (append && state.nextMaxId) params.set('max_id', state.nextMaxId);
 
@@ -610,10 +699,15 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     if (!original.media_attachments || !original.media_attachments.length) return null;
     const media = document.createElement('div');
     media.className = 'status-media';
+    const photos = original.media_attachments
+      .filter(att => att.type === 'image')
+      .map(att => ({ src: att.url || att.preview_url, alt: att.description }));
+    let photoIndex = 0;
     original.media_attachments.forEach(att => {
       if (att.type === 'image') {
         const img = document.createElement('img');
         const fullSrc = att.url || att.preview_url;
+        const index = photoIndex++;
         const dimensions = att.meta?.original || att.meta?.small;
         if (dimensions?.width && dimensions?.height) {
           img.width = dimensions.width;
@@ -632,11 +726,11 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
         img.tabIndex = 0;
         img.setAttribute('role', 'button');
         img.setAttribute('aria-label', att.description ? `View photo: ${att.description}` : 'View photo full size');
-        img.addEventListener('click', () => openLightbox(fullSrc, att.description, img));
+        img.addEventListener('click', () => openLightbox(photos, index, img));
         img.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            openLightbox(fullSrc, att.description, img);
+            openLightbox(photos, index, img);
           }
         });
         media.appendChild(img);
@@ -667,13 +761,13 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     if (isReblog) {
       const banner = document.createElement('div');
       banner.className = 'reblog-banner';
-      banner.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span>${escapeHtml(status.account.display_name || status.account.username)} boosted`;
+      banner.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span>${renderEmojiText(status.account.display_name || status.account.username, status.account.emojis)} boosted`;
       card.appendChild(banner);
     }
 
     const profileUrl = original.account.url;
     const profileIsSafe = !!(profileUrl && isHttpUrl(profileUrl));
-    const displayName = escapeHtml(original.account.display_name || original.account.username);
+    const displayName = renderEmojiText(original.account.display_name || original.account.username, original.account.emojis);
     const avatarImg = `<img src="${escapeAttr(original.account.avatar)}" alt="">`;
 
     const header = document.createElement('div');
@@ -698,19 +792,19 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
     if (original.spoiler_text) {
       const cw = document.createElement('details');
       const summary = document.createElement('summary');
-      summary.textContent = original.spoiler_text;
+      summary.innerHTML = renderEmojiText(original.spoiler_text, original.emojis);
       cw.appendChild(summary);
       if (media) cw.appendChild(media);
       const content = document.createElement('div');
       content.className = 'status-content';
-      content.innerHTML = sanitizeStatusHtml(original.content);
+      content.innerHTML = sanitizeStatusHtml(original.content, original.emojis);
       cw.appendChild(content);
       card.appendChild(cw);
     } else {
       if (media) card.appendChild(media);
       const content = document.createElement('div');
       content.className = 'status-content';
-      content.innerHTML = sanitizeStatusHtml(original.content);
+      content.innerHTML = sanitizeStatusHtml(original.content, original.emojis);
       card.appendChild(content);
     }
 
@@ -778,10 +872,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId } from './pure.mjs';
   function show(elem) { elem.classList.remove('hidden'); }
   function hide(elem) { elem.classList.add('hidden'); }
   function showError(elem, msg) { elem.textContent = msg; show(elem); }
-  function escapeHtml(str) {
-    return (str || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
-  function escapeAttr(str) { return escapeHtml(str); }
+  const escapeAttr = escapeHtml;
 
   // ---------- bootstrap ----------
 

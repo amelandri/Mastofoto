@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-09-01
+
+### Added
+
+- The Settings screen's timeline picker now offers "Home timeline" as an option alongside your Mastodon lists — no extra permission needed, since it's covered by the same `read` scope already requested. Choosing it skips the list-members preview (there's no "membership" to show), and it's remembered per-instance for next time just like a list choice.
+- Custom emoji (`:shortcode:`) now render as actual images instead of literal text — in post text and content-warning summaries, in author display names (post header, "boosted" banner, list-members preview). Handled with the same security-conscious pattern as every other external URL in the app: each emoji's image URL is validated before use, and an unrecognized or unsafe shortcode is just left as plain text.
+- On a post with multiple photos, the lightbox can now move between them: swipe left/right on touch, or use the arrow keys on a keyboard. Navigation clamps at the first/last photo rather than wrapping around.
+
+### Changed
+
+- The post date now shows a 2-digit year (`31/08/26` instead of `31/08/2026`).
+- On mobile, the post date now sits on the same row as the author's username (right-aligned), the same layout already used on desktop, instead of wrapping onto its own full-width line below. To guarantee the username never overlaps the date now that they share a row, `.username` gets a fixed width on mobile with a fade-to-transparent effect on truncated text, instead of the usual ellipsis. The "New" badge keeps its own separate behavior: pinned to the card's top-right corner regardless of the header's content, same as before — only the date moved.
+- Various Improvements to icons and text positioning
+
+### Fixed
+
+- Logging in failed with "crypto.randomUUID is not a function" when testing from a real phone over a plain `http://<lan-ip>:port` address instead of `http://localhost` — `crypto.randomUUID()` requires a secure context (HTTPS, or `localhost`), which a LAN IP over plain HTTP isn't. The OAuth `state` value now falls back to building a UUID from `crypto.getRandomValues()` (which has no such restriction) when `crypto.randomUUID` isn't available.
+
 ## [0.5.1] - 2026-08-31
 
 ### Fixed

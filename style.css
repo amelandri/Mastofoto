@@ -112,6 +112,7 @@ body {
 
 .btn-icon {
   margin-right: 6px;
+  margin-top: -2px;
   opacity: 0.7;
   display: inline-flex;
   vertical-align: middle;
@@ -121,6 +122,10 @@ body {
   width: 16px;
   height: 16px;
   display: block;
+}
+
+.status-actions .btn-icon{
+  margin-top: 0;
 }
 
 .status-actions .btn-icon svg {
@@ -134,12 +139,17 @@ body {
   margin-top: 0px;
 }
 
+.reblog-banner .btn-icon {
+  margin-top: 0px;
+}
+
 .reblog-banner .btn-icon svg {
   width: 13px;
   height: 13px;
   display: block;
   stroke-width: 3;
   color: var(--link);
+  margin-top: 1px;
 }
 
 .hidden {
@@ -382,7 +392,6 @@ a.member-name:hover {
 }
 
 .status-card {
-  position: relative;
   background: var(--surface);
   border-radius: 8px;
   padding: 16px;
@@ -429,7 +438,7 @@ a.member-name:hover {
   min-width: 0;
   flex: 1 1 auto;
   height: 48px;
-  padding-top: 2px;
+  padding-top: 1px;
 }
 
 .status-author .display-name,
@@ -441,6 +450,7 @@ a.member-name:hover {
 
 .status-author .display-name {
   font-weight: 600;
+  margin-bottom: 3px;
 }
 
 .status-author .display-name a{
@@ -452,6 +462,7 @@ a.member-name:hover {
   color: var(--text-secondary);
   font-size: 0.85rem;
   text-decoration: none;
+  margin-top: 2px;
 }
 
 a.username:hover {
@@ -464,18 +475,30 @@ a.username:hover {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  margin-top: -5px;
 }
 
 .status-date {
   color: var(--text-tertiary);
   font-size: 0.8rem;
   white-space: nowrap;
+  margin-top: 17px;
 }
 
 .status-content {
   word-wrap: break-word;
   line-height: 1.4;
+}
+
+img.emoji {
+  width: 1.2em !important;
+  height: 1.2em !important;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.reblog-banner .emoji {
+  margin:0 5px;
 }
 
 .status-content p {
@@ -653,26 +676,43 @@ a.username:hover {
     margin-bottom: 20px;
   }
 
-  .status-header {
-    flex-wrap: wrap;
+  .status-author .display-name {
+    margin-bottom: 5px;
+  }
+
+  .status-author .username {
+    display: block;
+    width: 195px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: clip;
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 20px), transparent 100%);
+    mask-image: linear-gradient(to right, black calc(100% - 20px), transparent 100%);
+    font-size: 0.8rem;
   }
 
   .status-meta {
-    flex-basis: 100%;
-    margin-left: 0;
-    align-items: flex-start;
+    margin-top: -4px;
   }
 
+
   .status-date {
-    margin-top: -8px;
-    padding-left: 50px;
+    margin-top:19px;
+    font-size: 0.7rem;
+  }
+
+  .status-card {
+    position: relative;
+  }
+
+  .status-card.is-new .status-header {
+    padding-right: 60px;
   }
 
   .new-badge {
     position: absolute;
     top: 16px;
     right: 16px;
-    margin-right: 0px;
   }
 
 }
