@@ -1,4 +1,4 @@
-import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from './pure.mjs';
+import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, mediaGridColumns } from './pure.mjs';
 
 (() => {
   'use strict';
@@ -702,6 +702,10 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
     const photos = original.media_attachments
       .filter(att => att.type === 'image')
       .map(att => ({ src: att.url || att.preview_url, alt: att.description }));
+    if (photos.length > 1) {
+      media.classList.add('status-media-grid');
+      media.style.setProperty('--media-columns', String(mediaGridColumns(photos.length)));
+    }
     let photoIndex = 0;
     original.media_attachments.forEach(att => {
       if (att.type === 'image') {

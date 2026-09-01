@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Posts with more than one photo now display them in a uniform grid (2 or 3 columns depending on the count) with every tile cropped to the same 4:3 aspect ratio, instead of stacking photos at their natural, mismatched heights. Single-photo posts are unchanged.
+
 ## [0.5.3] - 2026-09-01
 
 ### Fixed

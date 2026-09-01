@@ -536,6 +536,16 @@ img.emoji {
   background-position: center;
 }
 
+.status-media-grid {
+  grid-template-columns: repeat(var(--media-columns, 2), minmax(0, 1fr));
+}
+
+.status-media-grid img,
+.status-media-grid video {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
 #lightbox {
   position: fixed;
   inset: 0;

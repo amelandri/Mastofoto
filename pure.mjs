@@ -35,6 +35,19 @@ export function renderEmojiText(text, emojis, base) {
   }, escaped);
 }
 
+// How many grid columns a multi-photo post should use: 3 when the count
+// divides evenly by 3, otherwise 2. Counts that divide evenly by neither
+// (e.g. 5) fall back to 2 and just end up with a shorter last row — every
+// tile still gets the same column width (and, with a fixed aspect-ratio,
+// the same height), so this is a plausible default rather than an attempt
+// at perfectly equal rows for every possible count. Only meaningful for
+// count > 1 — callers only invoke it in that case.
+export function mediaGridColumns(count) {
+  if (count % 3 === 0) return 3;
+  if (count % 2 === 0) return 2;
+  return 2;
+}
+
 export function hasPhoto(status) {
   const original = status.reblog || status;
   return (original.media_attachments || []).some(att => att.type === 'image');
