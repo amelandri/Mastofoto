@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-09-01
+
 ### Added
 
 - The Settings screen's timeline picker now offers "Home timeline" as an option alongside your Mastodon lists — no extra permission needed, since it's covered by the same `read` scope already requested. Choosing it skips the list-members preview (there's no "membership" to show), and it's remembered per-instance for next time just like a list choice.
