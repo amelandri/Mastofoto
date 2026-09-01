@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-09-01
+
+### Fixed
+
+- Improvements to Post publishing date positioning
+
 ## [0.5.2] - 2026-09-01
 
 ### Added
