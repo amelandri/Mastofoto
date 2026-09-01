@@ -643,8 +643,12 @@ img.emoji {
   align-items: center;
 }
 
-#load-more-btn {
-  display: block;
+#scroll-sentinel {
+  height: 1px;
+}
+
+#load-more-status {
+  text-align: center;
   margin: 10px auto;
 }
 
