@@ -392,6 +392,7 @@ a.member-name:hover {
 }
 
 .status-card {
+  position: relative;
   background: var(--surface);
   border-radius: 8px;
   padding: 16px;
@@ -400,6 +401,9 @@ a.member-name:hover {
 }
 
 .new-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
   background: var(--btn-primary-bg);
   color: var(--accent-contrast);
   font-size: 0.55rem;
@@ -420,10 +424,12 @@ a.member-name:hover {
 }
 
 .status-header {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 14px;
+  padding-right: 110px;
 }
 
 .status-header img {
@@ -469,20 +475,13 @@ a.username:hover {
   text-decoration: underline;
 }
 
-.status-meta {
-  flex-shrink: 0;
-  margin-left: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  margin-top: -5px;
-}
-
 .status-date {
+  position: absolute;
+  bottom: 9px;
+  right: 0;
   color: var(--text-tertiary);
   font-size: 0.8rem;
   white-space: nowrap;
-  margin-top: 17px;
 }
 
 .status-content {
@@ -701,28 +700,13 @@ img.emoji {
     font-size: 0.8rem;
   }
 
-  .status-meta {
-    margin-top: -4px;
-  }
-
-
   .status-date {
-    margin-top: 25px;
     font-size: 0.7rem;
+    bottom: 5px;
   }
 
-  .status-card {
-    position: relative;
-  }
-
-  .status-card.is-new .status-header {
-    padding-right: 60px;
-  }
-
-  .new-badge {
-    position: absolute;
-    top: 16px;
-    right: 16px;
+  .status-header {
+    padding-right: 90px;
   }
 
 }

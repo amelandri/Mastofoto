@@ -762,6 +762,13 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     const card = document.createElement('div');
     card.className = isNew ? 'status-card is-new' : 'status-card';
 
+    if (isNew) {
+      const badge = document.createElement('span');
+      badge.className = 'new-badge';
+      badge.textContent = 'New';
+      card.appendChild(badge);
+    }
+
     if (isReblog) {
       const banner = document.createElement('div');
       banner.className = 'reblog-banner';
@@ -784,10 +791,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
           ? `<a class="username" href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">@${escapeHtml(original.account.acct)}</a>`
           : `<div class="username">@${escapeHtml(original.account.acct)}</div>`}
       </div>
-      <div class="status-meta">
-        ${isNew ? '<span class="new-badge">New</span>' : ''}
-        <div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>
-      </div>
+      <div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>
     `;
     card.appendChild(header);
 
