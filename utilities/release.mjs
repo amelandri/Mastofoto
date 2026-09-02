@@ -41,99 +41,124 @@ if (capture('git status --porcelain')) {
   process.exit(1);
 }
 
+// A previous run of this same script (e.g. without --push, to prepare
+// locally and review before publishing) may have already done everything up
+// to the merges. Detect that exact state and skip straight to publishing
+// instead of treating "tag already exists" as always fatal — otherwise a
+// prepare-then-push workflow can never complete: the second run would abort
+// on the tag check before ever reaching `git push`.
+let alreadyPrepared = false;
 if (capture(`git tag -l ${tag}`)) {
-  console.error(`Tag ${tag} already exists.`);
-  process.exit(1);
+  const tagCommit = capture(`git rev-parse ${tag}^{commit}`);
+  const devCommit = capture('git rev-parse dev');
+  const mainCommit = capture('git rev-parse main');
+  const devIsAncestorOfProduction = (() => {
+    try {
+      execSync(`git merge-base --is-ancestor ${devCommit} production`, { cwd: repoRoot });
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  if (tagCommit === devCommit && mainCommit === devCommit && devIsAncestorOfProduction) {
+    alreadyPrepared = true;
+    console.log(`Tag ${tag} already exists and matches a fully prepared local release (dev = main = ${tag}, merged into production) — skipping straight to publishing.`);
+  } else {
+    console.error(`Tag ${tag} already exists but doesn't match a clean, fully-prepared local state for this version. Resolve manually before retrying.`);
+    process.exit(1);
+  }
 }
 
-console.log('== Running tests ==');
-run('node --check app.js');
-run('node --check pure.mjs');
-run('node --test');
+if (!alreadyPrepared) {
+  console.log('== Running tests ==');
+  run('node --check app.js');
+  run('node --check pure.mjs');
+  run('node --test');
 
-console.log('\n== Updating APP_VERSION in app.js ==');
-const appJsPath = new URL('../app.js', import.meta.url);
-let appJs = readFileSync(appJsPath, 'utf8');
-const versionRegex = /const APP_VERSION = '[^']*';/;
-if (!versionRegex.test(appJs)) {
-  console.error('Could not find "const APP_VERSION = \'...\';" in app.js');
-  process.exit(1);
-}
-appJs = appJs.replace(versionRegex, `const APP_VERSION = '${version}';`);
-writeFileSync(appJsPath, appJs);
+  console.log('\n== Updating APP_VERSION in app.js ==');
+  const appJsPath = new URL('../app.js', import.meta.url);
+  let appJs = readFileSync(appJsPath, 'utf8');
+  const versionRegex = /const APP_VERSION = '[^']*';/;
+  if (!versionRegex.test(appJs)) {
+    console.error('Could not find "const APP_VERSION = \'...\';" in app.js');
+    process.exit(1);
+  }
+  appJs = appJs.replace(versionRegex, `const APP_VERSION = '${version}';`);
+  writeFileSync(appJsPath, appJs);
 
-console.log('== Moving CHANGELOG "Unreleased" section into a new version section ==');
-const changelogPath = new URL('../CHANGELOG.md', import.meta.url);
-let changelog = readFileSync(changelogPath, 'utf8');
+  console.log('== Moving CHANGELOG "Unreleased" section into a new version section ==');
+  const changelogPath = new URL('../CHANGELOG.md', import.meta.url);
+  let changelog = readFileSync(changelogPath, 'utf8');
 
-const unreleasedHeading = '## [Unreleased]';
-const headingIdx = changelog.indexOf(unreleasedHeading);
-if (headingIdx === -1) {
-  console.error('Could not find "## [Unreleased]" in CHANGELOG.md');
-  process.exit(1);
-}
-const afterHeadingIdx = headingIdx + unreleasedHeading.length;
-const nextHeadingMatch = changelog.slice(afterHeadingIdx).match(/\n## \[/);
-if (!nextHeadingMatch) {
-  console.error('Could not find the section following "## [Unreleased]" in CHANGELOG.md');
-  process.exit(1);
-}
-const nextHeadingIdx = afterHeadingIdx + nextHeadingMatch.index;
-const unreleasedBody = changelog.slice(afterHeadingIdx, nextHeadingIdx).trim();
+  const unreleasedHeading = '## [Unreleased]';
+  const headingIdx = changelog.indexOf(unreleasedHeading);
+  if (headingIdx === -1) {
+    console.error('Could not find "## [Unreleased]" in CHANGELOG.md');
+    process.exit(1);
+  }
+  const afterHeadingIdx = headingIdx + unreleasedHeading.length;
+  const nextHeadingMatch = changelog.slice(afterHeadingIdx).match(/\n## \[/);
+  if (!nextHeadingMatch) {
+    console.error('Could not find the section following "## [Unreleased]" in CHANGELOG.md');
+    process.exit(1);
+  }
+  const nextHeadingIdx = afterHeadingIdx + nextHeadingMatch.index;
+  const unreleasedBody = changelog.slice(afterHeadingIdx, nextHeadingIdx).trim();
 
-if (!unreleasedBody) {
-  console.error('The "Unreleased" section is empty — nothing to release.');
-  process.exit(1);
-}
+  if (!unreleasedBody) {
+    console.error('The "Unreleased" section is empty — nothing to release.');
+    process.exit(1);
+  }
 
-const today = new Date().toISOString().slice(0, 10);
-const newSection = `${unreleasedHeading}\n\n## [${version}] - ${today}\n\n${unreleasedBody}\n\n`;
-changelog = changelog.slice(0, headingIdx) + newSection + changelog.slice(nextHeadingIdx + 1);
-writeFileSync(changelogPath, changelog);
+  const today = new Date().toISOString().slice(0, 10);
+  const newSection = `${unreleasedHeading}\n\n## [${version}] - ${today}\n\n${unreleasedBody}\n\n`;
+  changelog = changelog.slice(0, headingIdx) + newSection + changelog.slice(nextHeadingIdx + 1);
+  writeFileSync(changelogPath, changelog);
 
-console.log('\n== Committing and tagging on dev ==');
-run('git add app.js CHANGELOG.md');
-run(`git commit -m "Release ${tag}"`);
-run(`git tag -a ${tag} -m "Release ${tag}"`);
+  console.log('\n== Committing and tagging on dev ==');
+  run('git add app.js CHANGELOG.md');
+  run(`git commit -m "Release ${tag}"`);
+  run(`git tag -a ${tag} -m "Release ${tag}"`);
 
-console.log('\n== Fast-forwarding main ==');
-run('git checkout main');
-try {
-  run('git merge dev --ff-only');
-} catch {
-  console.error(
-    `\nFast-forward merge into main failed (main has diverged). The release commit and tag ${tag} ` +
-    'already exist on dev — resolve this manually per utilities/ISTRUZIONI.MD (regular "git merge dev" ' +
-    'on main, then continue from the "production" step), then push.'
-  );
+  console.log('\n== Fast-forwarding main ==');
+  run('git checkout main');
+  try {
+    run('git merge dev --ff-only');
+  } catch {
+    console.error(
+      `\nFast-forward merge into main failed (main has diverged). The release commit and tag ${tag} ` +
+      'already exist on dev — resolve this manually per utilities/ISTRUZIONI.MD (regular "git merge dev" ' +
+      'on main, then continue from the "production" step), then push.'
+    );
+    run('git checkout dev');
+    process.exit(1);
+  }
+
+  console.log('\n== Merging main into production ==');
+  run('git checkout production');
+  try {
+    run('git merge main --no-edit');
+  } catch {
+    console.error(
+      '\nMerging main into production hit a conflict — resolve it, commit, verify the personal layer ' +
+      '(rel="me" / Umami script) is still present, then push manually.'
+    );
+    process.exit(1);
+  }
+
+  const personalLayer = capture('git show production:index.html | grep -n \'rel="me"\\|umami\' || true');
+  if (!personalLayer) {
+    console.error(
+      '\nWarning: could not find the personal layer (rel="me" / umami) in production:index.html after the merge. ' +
+      'Check before pushing.'
+    );
+  } else {
+    console.log('Personal layer confirmed present in production:index.html:');
+    console.log(personalLayer);
+  }
+
   run('git checkout dev');
-  process.exit(1);
 }
-
-console.log('\n== Merging main into production ==');
-run('git checkout production');
-try {
-  run('git merge main --no-edit');
-} catch {
-  console.error(
-    '\nMerging main into production hit a conflict — resolve it, commit, verify the personal layer ' +
-    '(rel="me" / Umami script) is still present, then push manually.'
-  );
-  process.exit(1);
-}
-
-const personalLayer = capture('git show production:index.html | grep -n \'rel="me"\\|umami\' || true');
-if (!personalLayer) {
-  console.error(
-    '\nWarning: could not find the personal layer (rel="me" / umami) in production:index.html after the merge. ' +
-    'Check before pushing.'
-  );
-} else {
-  console.log('Personal layer confirmed present in production:index.html:');
-  console.log(personalLayer);
-}
-
-run('git checkout dev');
 
 if (push) {
   console.log('\n== Pushing ==');
