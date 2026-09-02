@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Posts with more than one photo now display them in a uniform grid (2 or 3 columns depending on the count) with every tile cropped to the same 4:3 aspect ratio, instead of stacking photos at their natural, mismatched heights. Single-photo posts are unchanged.
 - The post header's "New" badge and timestamp are now positioned by anchoring each directly to a fixed point (the badge to the card's own corner, the timestamp to the header row) instead of a flex column that relied on a different hand-tuned offset per screen size. This also fixes the badge landing in a different spot on boosted posts than on plain ones — it's now always in the same corner of the card either way.
 
+### Fixed
+
+- Corrected avatar display in Timeline members list so border radius is identical to the one used in post header
+
 ## [0.5.3] - 2026-09-01
 
 ### Fixed
