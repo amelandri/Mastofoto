@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.5] - 2026-09-02
+
 ### Changed
 
 - Revamped the login page: a bolder headline, a feature checklist highlighting what the app does, and the connect form now sits in its own visually distinct panel instead of blending into the surrounding text. On desktop the checklist and the connect form sit side by side; on mobile they stack as before.
