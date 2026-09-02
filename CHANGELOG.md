@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-09-02
+
 ### Changed
 
 - Replaced the "Load more" button with automatic lazy loading: older posts now load on their own as you scroll near the bottom, including automatically paging past any page that happened to contain no photos. Coordinated with pull-to-refresh so the two never race or interfere with each other.

@@ -3,7 +3,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
 (() => {
   'use strict';
 
-  const APP_VERSION = '0.5.3';
+  const APP_VERSION = '0.5.4';
   const REDIRECT_URI = window.location.origin + window.location.pathname;
   const SCOPES = 'read write:favourites write:statuses';
   const APP_NAME = 'Mastofoto';
