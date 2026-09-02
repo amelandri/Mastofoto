@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from './pure.mjs';
+import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, mediaGridColumns } from './pure.mjs';
 
 test('isHttpUrl accepts http(s) URLs', () => {
   assert.equal(isHttpUrl('https://example.com/foo'), true);
@@ -75,4 +75,19 @@ test('renderEmojiText leaves an unknown shortcode as plain escaped text', () => 
 test('renderEmojiText ignores an emoji entry with a non-http(s) url (regression guard)', () => {
   const emojis = [{ shortcode: 'evil', url: 'javascript:alert(1)' }];
   assert.equal(renderEmojiText(':evil:', emojis), ':evil:');
+});
+
+test('mediaGridColumns uses 3 columns when the count divides evenly by 3', () => {
+  assert.equal(mediaGridColumns(3), 3);
+  assert.equal(mediaGridColumns(6), 3);
+});
+
+test('mediaGridColumns uses 2 columns when the count divides evenly by 2', () => {
+  assert.equal(mediaGridColumns(2), 2);
+  assert.equal(mediaGridColumns(4), 2);
+});
+
+test('mediaGridColumns falls back to 2 columns for a count divisible by neither (e.g. 5)', () => {
+  assert.equal(mediaGridColumns(5), 2);
+  assert.equal(mediaGridColumns(7), 2);
 });

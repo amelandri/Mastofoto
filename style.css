@@ -206,6 +206,12 @@ body {
 }
 
 .home-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
   color: var(--link);
   font-size: 0.9rem;
   white-space: nowrap;
@@ -341,9 +347,17 @@ button:hover {
 #list-members img {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
+  border-radius: 6px;
   object-fit: cover;
   flex-shrink: 0;
+}
+
+#list-members .member-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 #list-members .member-name {
@@ -351,6 +365,7 @@ button:hover {
   font-size: 0.9rem;
   color: var(--text);
   text-decoration: none;
+  overflow-wrap: anywhere;
 }
 
 a.member-name:hover {
@@ -360,6 +375,7 @@ a.member-name:hover {
 #list-members .member-handle {
   color: var(--text-secondary);
   font-size: 0.8rem;
+  overflow-wrap: anywhere;
 }
 
 #pull-refresh {
@@ -392,6 +408,7 @@ a.member-name:hover {
 }
 
 .status-card {
+  position: relative;
   background: var(--surface);
   border-radius: 8px;
   padding: 16px;
@@ -400,6 +417,9 @@ a.member-name:hover {
 }
 
 .new-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
   background: var(--btn-primary-bg);
   color: var(--accent-contrast);
   font-size: 0.55rem;
@@ -420,10 +440,12 @@ a.member-name:hover {
 }
 
 .status-header {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 14px;
+  padding-right: 110px;
 }
 
 .status-header img {
@@ -469,20 +491,13 @@ a.username:hover {
   text-decoration: underline;
 }
 
-.status-meta {
-  flex-shrink: 0;
-  margin-left: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  margin-top: -5px;
-}
-
 .status-date {
+  position: absolute;
+  bottom: 9px;
+  right: 0;
   color: var(--text-tertiary);
   font-size: 0.8rem;
   white-space: nowrap;
-  margin-top: 17px;
 }
 
 .status-content {
@@ -534,6 +549,16 @@ img.emoji {
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
+}
+
+.status-media-grid {
+  grid-template-columns: repeat(var(--media-columns, 2), minmax(0, 1fr));
+}
+
+.status-media-grid img,
+.status-media-grid video {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
 }
 
 #lightbox {
@@ -634,8 +659,12 @@ img.emoji {
   align-items: center;
 }
 
-#load-more-btn {
-  display: block;
+#scroll-sentinel {
+  height: 1px;
+}
+
+#load-more-status {
+  text-align: center;
   margin: 10px auto;
 }
 
@@ -691,28 +720,23 @@ img.emoji {
     font-size: 0.8rem;
   }
 
-  .status-meta {
-    margin-top: -4px;
-  }
-
-
   .status-date {
-    margin-top: 25px;
     font-size: 0.7rem;
+    bottom: 5px;
   }
 
-  .status-card {
-    position: relative;
+  .status-header {
+    padding-right: 90px;
   }
 
-  .status-card.is-new .status-header {
-    padding-right: 60px;
+  #list-members .member-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
   }
 
-  .new-badge {
-    position: absolute;
-    top: 16px;
-    right: 16px;
+  #list-members .member-handle{
+    font-size: 0.6rem;
   }
 
 }

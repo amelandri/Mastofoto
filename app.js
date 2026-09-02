@@ -1,9 +1,9 @@
-import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from './pure.mjs';
+import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, mediaGridColumns } from './pure.mjs';
 
 (() => {
   'use strict';
 
-  const APP_VERSION = '0.5.3';
+  const APP_VERSION = '0.5.4';
   const REDIRECT_URI = window.location.origin + window.location.pathname;
   const SCOPES = 'read write:favourites write:statuses';
   const APP_NAME = 'Mastofoto';
@@ -171,6 +171,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
     currentListId: null,
     nextMaxId: null,
     lastSeenBefore: null,
+    hasMore: true,
   };
 
   function lastSeenKey(listId) {
@@ -197,8 +198,10 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
     changeListBtn: document.getElementById('change-list-btn'),
     statuses: document.getElementById('statuses'),
     timelineError: document.getElementById('timeline-error'),
-    loadMoreBtn: document.getElementById('load-more-btn'),
+    scrollSentinel: document.getElementById('scroll-sentinel'),
+    loadMoreStatus: document.getElementById('load-more-status'),
     listSetupView: document.getElementById('list-setup-view'),
+    listSetupHomeBtn: document.getElementById('list-setup-home-btn'),
     listSelect: document.getElementById('list-select'),
     useListBtn: document.getElementById('use-list-btn'),
     themeSelect: document.getElementById('theme-select'),
@@ -210,6 +213,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
     lightboxImg: document.getElementById('lightbox-img'),
     infoBtn: document.getElementById('info-btn'),
     infoView: document.getElementById('info-view'),
+    infoHomeBtn: document.getElementById('info-home-btn'),
     loginInfoBtn: document.getElementById('login-info-btn'),
     appVersion: document.getElementById('app-version'),
     pullRefresh: document.getElementById('pull-refresh'),
@@ -228,6 +232,21 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
   function showView(view) {
     VIEWS.forEach(hide);
     show(view);
+  }
+
+  // "Home Page" links in list-setup-view/info-view used to be plain <a href=".">
+  // anchors, causing a full page reload (re-fetching app.js, re-running
+  // verify_credentials, and re-fetching the timeline from scratch) just to get
+  // back to a view that was already loaded in memory. goHome() instead reuses
+  // showView() like every other navigation in this file.
+  function goHome() {
+    if (!state.token) {
+      showView(el.loginView);
+    } else if (state.currentListId) {
+      showView(el.timelineView);
+    } else {
+      showView(el.listSetupView);
+    }
   }
 
   el.appVersion.textContent = APP_VERSION;
@@ -323,14 +342,13 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
   const PULL_MAX = 100;
   let pullStartY = null;
   let pulling = false;
-  let refreshing = false;
 
   function setPullHeight(px) {
     el.pullRefresh.style.height = `${px}px`;
   }
 
   document.addEventListener('touchstart', (e) => {
-    if (refreshing || el.timelineView.classList.contains('hidden')) return;
+    if (el.timelineView.classList.contains('hidden')) return;
     if (window.scrollY > 0) return;
     pullStartY = e.touches[0].clientY;
     pulling = true;
@@ -361,7 +379,6 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
     el.pullRefresh.classList.remove('pulling');
 
     if (height >= PULL_THRESHOLD) {
-      refreshing = true;
       el.pullRefreshLabel.textContent = 'Refreshing…';
       setPullHeight(50);
       try {
@@ -370,7 +387,6 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
         setPullHeight(0);
         el.pullRefresh.classList.remove('ready');
         el.pullRefreshLabel.textContent = 'Pull to refresh';
-        refreshing = false;
       }
     } else {
       setPullHeight(0);
@@ -382,6 +398,8 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
 
   el.infoBtn.addEventListener('click', () => showView(el.infoView));
   el.loginInfoBtn.addEventListener('click', () => showView(el.infoView));
+  el.listSetupHomeBtn.addEventListener('click', goHome);
+  el.infoHomeBtn.addEventListener('click', goHome);
 
   // ---------- login flow ----------
 
@@ -486,10 +504,12 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
         const name = renderEmojiText(account.display_name || account.username, account.emojis);
         item.innerHTML = `
           <img src="${escapeAttr(account.avatar)}" alt="">
-          ${account.url && isHttpUrl(account.url)
-            ? `<a class="member-name" href="${escapeAttr(account.url)}" target="_blank" rel="noopener noreferrer">${name}</a>`
-            : `<span class="member-name">${name}</span>`}
-          <span class="member-handle">@${escapeHtml(account.acct)}</span>
+          <div class="member-info">
+            ${account.url && isHttpUrl(account.url)
+              ? `<a class="member-name" href="${escapeAttr(account.url)}" target="_blank" rel="noopener noreferrer">${name}</a>`
+              : `<span class="member-name">${name}</span>`}
+            <span class="member-handle">@${escapeHtml(account.acct)}</span>
+          </div>
         `;
         el.listMembers.appendChild(item);
       });
@@ -558,14 +578,45 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
   async function selectList(listId) {
     state.currentListId = listId;
     state.nextMaxId = null;
+    state.hasMore = true;
+    consecutiveEmptyPages = 0;
     el.statuses.innerHTML = '';
 
     await loadTimeline(false);
   }
 
-  el.loadMoreBtn.addEventListener('click', () => loadTimeline(true));
+  // ---------- timeline loading (lazy load) ----------
+  //
+  // loadTimeline() is called from three independent places: a fresh list
+  // selection, pull-to-refresh, and auto-continuation triggered by scrolling
+  // near the bottom. A plain boolean "busy" guard would let one of these
+  // silently no-op if it overlaps another (e.g. pull-to-refresh flashing
+  // "Refreshing…" and resetting without ever actually refreshing, if a
+  // background auto-load happened to be in flight at that exact moment) —
+  // so every call instead goes through a shared queue: it always eventually
+  // runs, in order, never dropped.
+  const AUTO_LOAD_MARGIN_PX = 400;
+  const MAX_CONSECUTIVE_EMPTY_PAGES = 20; // defensive backstop against a pagination bug or a pathologically photo-sparse timeline, not a UX pacing device — should never be hit in normal use
 
-  async function loadTimeline(append) {
+  let pendingTimelineCalls = 0;
+  let timelineQueue = Promise.resolve();
+  let consecutiveEmptyPages = 0;
+
+  function loadTimeline(append) {
+    pendingTimelineCalls++;
+    if (append) show(el.loadMoreStatus);
+    const run = timelineQueue
+      .then(() => runLoadTimeline(append))
+      .finally(() => { pendingTimelineCalls--; });
+    timelineQueue = run.catch(() => {}); // keep the chain alive even if this run failed
+    run.then(ok => {
+      const continuing = ok && maybeLoadMore();
+      if (append && !continuing) hide(el.loadMoreStatus);
+    });
+    return run;
+  }
+
+  async function runLoadTimeline(append) {
     try {
       hide(el.timelineError);
       const path = state.currentListId === HOME_TIMELINE_ID
@@ -577,9 +628,10 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
       const res = await apiFetch(state.instance, state.token, `${path}?${params.toString()}`);
       const statuses = await res.json();
       state.nextMaxId = parseNextMaxId(res.headers.get('Link'), statuses);
-      el.loadMoreBtn.classList.toggle('hidden', statuses.length === 0);
+      state.hasMore = statuses.length > 0;
 
       const photoStatuses = statuses.filter(hasPhoto);
+      consecutiveEmptyPages = (append && photoStatuses.length === 0) ? consecutiveEmptyPages + 1 : 0;
 
       if (!append) {
         state.lastSeenBefore = getInstanceData(state.instance, lastSeenKey(state.currentListId));
@@ -589,10 +641,36 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
       }
 
       renderStatuses(photoStatuses, append);
+      return true;
     } catch (err) {
       showError(el.timelineError, err.message);
+      return false;
     }
   }
+
+  function sentinelNearViewport() {
+    const rect = el.scrollSentinel.getBoundingClientRect();
+    return rect.top <= window.innerHeight + AUTO_LOAD_MARGIN_PX;
+  }
+
+  // Called after every loadTimeline() call settles. Covers both auto-paging
+  // through pages with zero photos (the sentinel doesn't move, so an
+  // IntersectionObserver alone would never refire) and a short list that
+  // fits on one screen after a fresh load (no enter/exit transition either).
+  function maybeLoadMore() {
+    if (pendingTimelineCalls > 0) return false;
+    if (el.timelineView.classList.contains('hidden')) return false; // must precede the geometry check below: a hidden ancestor collapses to a zeroed rect, which would otherwise read as "near the top"
+    if (!state.hasMore) return false;
+    if (consecutiveEmptyPages >= MAX_CONSECUTIVE_EMPTY_PAGES) return false;
+    if (!sentinelNearViewport()) return false;
+    loadTimeline(true);
+    return true;
+  }
+
+  const scrollObserver = new IntersectionObserver(() => maybeLoadMore(), {
+    rootMargin: `0px 0px ${AUTO_LOAD_MARGIN_PX}px 0px`,
+  });
+  scrollObserver.observe(el.scrollSentinel);
 
   // ---------- rendering ----------
 
@@ -702,6 +780,10 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
     const photos = original.media_attachments
       .filter(att => att.type === 'image')
       .map(att => ({ src: att.url || att.preview_url, alt: att.description }));
+    if (photos.length > 1) {
+      media.classList.add('status-media-grid');
+      media.style.setProperty('--media-columns', String(mediaGridColumns(photos.length)));
+    }
     let photoIndex = 0;
     original.media_attachments.forEach(att => {
       if (att.type === 'image') {
@@ -758,6 +840,13 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
     const card = document.createElement('div');
     card.className = isNew ? 'status-card is-new' : 'status-card';
 
+    if (isNew) {
+      const badge = document.createElement('span');
+      badge.className = 'new-badge';
+      badge.textContent = 'New';
+      card.appendChild(badge);
+    }
+
     if (isReblog) {
       const banner = document.createElement('div');
       banner.className = 'reblog-banner';
@@ -780,10 +869,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText } from
           ? `<a class="username" href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">@${escapeHtml(original.account.acct)}</a>`
           : `<div class="username">@${escapeHtml(original.account.acct)}</div>`}
       </div>
-      <div class="status-meta">
-        ${isNew ? '<span class="new-badge">New</span>' : ''}
-        <div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>
-      </div>
+      <div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>
     `;
     card.appendChild(header);
 
