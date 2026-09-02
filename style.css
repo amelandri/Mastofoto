@@ -346,11 +346,20 @@ button:hover {
   flex-shrink: 0;
 }
 
+#list-members .member-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 #list-members .member-name {
   font-weight: 600;
   font-size: 0.9rem;
   color: var(--text);
   text-decoration: none;
+  overflow-wrap: anywhere;
 }
 
 a.member-name:hover {
@@ -360,6 +369,7 @@ a.member-name:hover {
 #list-members .member-handle {
   color: var(--text-secondary);
   font-size: 0.8rem;
+  overflow-wrap: anywhere;
 }
 
 #pull-refresh {
@@ -711,6 +721,16 @@ img.emoji {
 
   .status-header {
     padding-right: 90px;
+  }
+
+  #list-members .member-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  #list-members .member-handle{
+    font-size: 0.6rem;
   }
 
 }

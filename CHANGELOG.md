@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Replaced the "Load more" button with automatic lazy loading: older posts now load on their own as you scroll near the bottom, including automatically paging past any page that happened to contain no photos. Coordinated with pull-to-refresh so the two never race or interfere with each other.
 - Posts with more than one photo now display them in a uniform grid (2 or 3 columns depending on the count) with every tile cropped to the same 4:3 aspect ratio, instead of stacking photos at their natural, mismatched heights. Single-photo posts are unchanged.
 - The post header's "New" badge and timestamp are now positioned by anchoring each directly to a fixed point (the badge to the card's own corner, the timestamp to the header row) instead of a flex column that relied on a different hand-tuned offset per screen size. This also fixes the badge landing in a different spot on boosted posts than on plain ones — it's now always in the same corner of the card either way.
+- On mobile, a list member's handle now shows below their display name instead of next to it, fixing a layout overflow when both were long enough to make the combined row too wide for the screen.
 
 ### Fixed
 

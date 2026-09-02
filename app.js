@@ -485,10 +485,12 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
         const name = renderEmojiText(account.display_name || account.username, account.emojis);
         item.innerHTML = `
           <img src="${escapeAttr(account.avatar)}" alt="">
-          ${account.url && isHttpUrl(account.url)
-            ? `<a class="member-name" href="${escapeAttr(account.url)}" target="_blank" rel="noopener noreferrer">${name}</a>`
-            : `<span class="member-name">${name}</span>`}
-          <span class="member-handle">@${escapeHtml(account.acct)}</span>
+          <div class="member-info">
+            ${account.url && isHttpUrl(account.url)
+              ? `<a class="member-name" href="${escapeAttr(account.url)}" target="_blank" rel="noopener noreferrer">${name}</a>`
+              : `<span class="member-name">${name}</span>`}
+            <span class="member-handle">@${escapeHtml(account.acct)}</span>
+          </div>
         `;
         el.listMembers.appendChild(item);
       });
