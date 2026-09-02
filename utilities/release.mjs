@@ -4,6 +4,12 @@
 // version, commit + tag on dev, then fast-forward main and merge into
 // production. Pushing to origin is opt-in (--push) since that's the one step
 // that's hard to undo and visible to others.
+//
+// Every step below checks whether its own outcome is already in place before
+// acting, and skips itself if so. That makes the whole script safe to
+// re-run for the same version after a partial failure, an interrupted run,
+// or a manually deleted tag — it just continues from wherever things
+// actually stand, instead of redoing (and failing on) work already done.
 
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -17,6 +23,15 @@ function run(cmd) {
 
 function capture(cmd) {
   return execSync(cmd, { cwd: repoRoot, encoding: 'utf8' }).trim();
+}
+
+function isAncestor(ancestor, descendant) {
+  try {
+    execSync(`git merge-base --is-ancestor ${ancestor} ${descendant}`, { cwd: repoRoot });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 const version = process.argv[2];
@@ -41,55 +56,37 @@ if (capture('git status --porcelain')) {
   process.exit(1);
 }
 
-// A previous run of this same script (e.g. without --push, to prepare
-// locally and review before publishing) may have already done everything up
-// to the merges. Detect that exact state and skip straight to publishing
-// instead of treating "tag already exists" as always fatal — otherwise a
-// prepare-then-push workflow can never complete: the second run would abort
-// on the tag check before ever reaching `git push`.
-let alreadyPrepared = false;
-if (capture(`git tag -l ${tag}`)) {
-  const tagCommit = capture(`git rev-parse ${tag}^{commit}`);
-  const devCommit = capture('git rev-parse dev');
-  const mainCommit = capture('git rev-parse main');
-  const devIsAncestorOfProduction = (() => {
-    try {
-      execSync(`git merge-base --is-ancestor ${devCommit} production`, { cwd: repoRoot });
-      return true;
-    } catch {
-      return false;
-    }
-  })();
-  if (tagCommit === devCommit && mainCommit === devCommit && devIsAncestorOfProduction) {
-    alreadyPrepared = true;
-    console.log(`Tag ${tag} already exists and matches a fully prepared local release (dev = main = ${tag}, merged into production) — skipping straight to publishing.`);
-  } else {
-    console.error(`Tag ${tag} already exists but doesn't match a clean, fully-prepared local state for this version. Resolve manually before retrying.`);
-    process.exit(1);
-  }
+console.log('== Running tests ==');
+run('node --check app.js');
+run('node --check pure.mjs');
+run('node --test');
+
+// ---- APP_VERSION ----
+const appJsPath = new URL('../app.js', import.meta.url);
+let appJs = readFileSync(appJsPath, 'utf8');
+const versionRegex = /const APP_VERSION = '([^']*)';/;
+const versionMatch = appJs.match(versionRegex);
+if (!versionMatch) {
+  console.error('Could not find "const APP_VERSION = \'...\';" in app.js');
+  process.exit(1);
 }
-
-if (!alreadyPrepared) {
-  console.log('== Running tests ==');
-  run('node --check app.js');
-  run('node --check pure.mjs');
-  run('node --test');
-
-  console.log('\n== Updating APP_VERSION in app.js ==');
-  const appJsPath = new URL('../app.js', import.meta.url);
-  let appJs = readFileSync(appJsPath, 'utf8');
-  const versionRegex = /const APP_VERSION = '[^']*';/;
-  if (!versionRegex.test(appJs)) {
-    console.error('Could not find "const APP_VERSION = \'...\';" in app.js');
-    process.exit(1);
-  }
+if (versionMatch[1] === version) {
+  console.log(`\nAPP_VERSION is already '${version}' — skipping.`);
+} else {
+  console.log(`\n== Updating APP_VERSION in app.js (${versionMatch[1]} -> ${version}) ==`);
   appJs = appJs.replace(versionRegex, `const APP_VERSION = '${version}';`);
   writeFileSync(appJsPath, appJs);
+}
 
+// ---- CHANGELOG ----
+const changelogPath = new URL('../CHANGELOG.md', import.meta.url);
+let changelog = readFileSync(changelogPath, 'utf8');
+const versionHeadingPrefix = `## [${version}] -`;
+
+if (changelog.includes(versionHeadingPrefix)) {
+  console.log(`CHANGELOG already has a "${versionHeadingPrefix}" section — skipping.`);
+} else {
   console.log('== Moving CHANGELOG "Unreleased" section into a new version section ==');
-  const changelogPath = new URL('../CHANGELOG.md', import.meta.url);
-  let changelog = readFileSync(changelogPath, 'utf8');
-
   const unreleasedHeading = '## [Unreleased]';
   const headingIdx = changelog.indexOf(unreleasedHeading);
   if (headingIdx === -1) {
@@ -106,20 +103,45 @@ if (!alreadyPrepared) {
   const unreleasedBody = changelog.slice(afterHeadingIdx, nextHeadingIdx).trim();
 
   if (!unreleasedBody) {
-    console.error('The "Unreleased" section is empty — nothing to release.');
+    console.error(`The "Unreleased" section is empty and there is no existing "${versionHeadingPrefix}" section — nothing to release.`);
     process.exit(1);
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const newSection = `${unreleasedHeading}\n\n## [${version}] - ${today}\n\n${unreleasedBody}\n\n`;
+  const newSection = `${unreleasedHeading}\n\n${versionHeadingPrefix} ${today}\n\n${unreleasedBody}\n\n`;
   changelog = changelog.slice(0, headingIdx) + newSection + changelog.slice(nextHeadingIdx + 1);
   writeFileSync(changelogPath, changelog);
+}
 
-  console.log('\n== Committing and tagging on dev ==');
+// ---- commit ----
+if (capture('git status --porcelain -- app.js CHANGELOG.md')) {
+  console.log('\n== Committing release changes ==');
   run('git add app.js CHANGELOG.md');
   run(`git commit -m "Release ${tag}"`);
-  run(`git tag -a ${tag} -m "Release ${tag}"`);
+} else {
+  console.log('\napp.js and CHANGELOG.md already match this release — nothing to commit.');
+}
 
+// ---- tag ----
+const devCommit = capture('git rev-parse dev');
+const existingTag = capture(`git tag -l ${tag}`);
+if (existingTag) {
+  const existingTagCommit = capture(`git rev-parse ${tag}^{commit}`);
+  if (existingTagCommit === devCommit) {
+    console.log(`Tag ${tag} already points at dev's current HEAD — skipping.`);
+  } else {
+    console.error(`Tag ${tag} already exists but points at a different commit than dev's current HEAD. Delete it (git tag -d ${tag}) or resolve manually before retrying.`);
+    process.exit(1);
+  }
+} else {
+  console.log(`\n== Tagging ${tag} ==`);
+  run(`git tag -a ${tag} -m "Release ${tag}"`);
+}
+
+// ---- main ----
+if (capture('git rev-parse main') === capture('git rev-parse dev')) {
+  console.log('main is already up to date with dev — skipping.');
+} else {
   console.log('\n== Fast-forwarding main ==');
   run('git checkout main');
   try {
@@ -133,7 +155,12 @@ if (!alreadyPrepared) {
     run('git checkout dev');
     process.exit(1);
   }
+}
 
+// ---- production ----
+if (isAncestor(capture('git rev-parse dev'), 'production')) {
+  console.log('production already has this release merged — skipping.');
+} else {
   console.log('\n== Merging main into production ==');
   run('git checkout production');
   try {
@@ -156,9 +183,9 @@ if (!alreadyPrepared) {
     console.log('Personal layer confirmed present in production:index.html:');
     console.log(personalLayer);
   }
-
-  run('git checkout dev');
 }
+
+run('git checkout dev');
 
 if (push) {
   console.log('\n== Pushing ==');
