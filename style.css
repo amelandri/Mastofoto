@@ -183,7 +183,7 @@ body {
 }
 
 .intro {
-  margin: 0 0 18px;
+  margin: 0 0 30px;
   font-size: 1.05rem;
   line-height: 1.5;
   color: var(--text);
@@ -191,6 +191,79 @@ body {
 
 .intro a {
   color: var(--link);
+}
+
+.login-hook {
+  margin: 0 0 10px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.login-columns {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  margin-bottom: 20px;
+}
+
+.login-columns .feature-checklist,
+.login-columns .login-form {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.feature-checklist {
+  list-style: none;
+  margin: 0 0 28px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feature-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.check-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--link);
+}
+
+.check-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.login-form {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.login-form h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+.login-form .form-row button {
+  font-weight: 600;
+  padding: 8px 20px;
+}
+
+.outtro{
+  margin-top: 30px;
 }
 
 .section-header {
@@ -670,6 +743,19 @@ img.emoji {
 
 
 @media (max-width: 480px) {
+
+  .login-columns {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .login-columns .feature-checklist {
+    margin-bottom: 28px;
+  }
+
+  .login-columns .login-form {
+    margin-bottom: 20px;
+  }
 
   #app-header {
     padding: 10px 10px 0 10px;

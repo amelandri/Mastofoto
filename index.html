@@ -35,17 +35,29 @@
 
   <section id="login-view" class="hidden">
     <div class="card">
-      <p class="intro"><strong>Transform a Mastodon list, or your Home timeline, into a beatiful clean photo feed!</strong><br /><br />Mastofoto shows you the posts from one of your Mastodon lists (or your Home timeline), but only the ones that include a photo: every text-only post is filtered out.
-      <br /><br />Connect your account, pick a list, and favourite or boost photos right from the feed.
-      <br /><br />Follow the project on Mastodon: <a href="https://mastodon.uno/@mastofoto" target="_blank" rel="noopener noreferrer">@mastofoto@mastodon.uno</a></p>
+      <p class="login-hook">Transform your Mastodon feed into a clean photo-viewing experience.</p>
+      <p class="intro">Mastofoto turns one of your Mastodon lists, or your Home timeline, into a photo-only feed.<br />It filters out every text-only post, leaving just the pictures shared by the accounts you follow.</p>
 
-      <h2>Connect your Mastodon instance</h2>
-      <label for="instance-input">Instance domain (e.g. mastodon.uno)</label>
-      <div class="form-row">
-        <input type="text" id="instance-input" placeholder="mastodon.uno">
-        <button id="connect-btn">Connect</button>
+      <div class="login-columns">
+        <ul class="feature-checklist">
+          <li><span class="check-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12.5 11 15.5 16 9"/></svg></span>Only photo posts — every text-only post filtered out</li>
+          <li><span class="check-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12.5 11 15.5 16 9"/></svg></span>Favourite and reblog straight from the feed</li>
+          <li><span class="check-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12.5 11 15.5 16 9"/></svg></span>Works with any Mastodon instance</li>
+        </ul>
+
+        <div class="login-form">
+          <h2>Connect your Mastodon instance</h2>
+          <label for="instance-input">Instance domain (e.g. mastodon.uno)</label>
+          <div class="form-row">
+            <input type="url" id="instance-input" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="url" placeholder="mastodon.uno">
+            <button id="connect-btn">Connect</button>
+          </div>
+          <p id="login-error" class="error hidden" role="alert"></p>
+        </div>
       </div>
-      <p id="login-error" class="error hidden" role="alert"></p>
+
+      <p class="outtro">Follow the project on Mastodon: <a href="https://mastodon.uno/@mastofoto" target="_blank" rel="noopener noreferrer">@mastofoto@mastodon.uno</a></p>
+
       <p class="app-disclosure">🔒 No server, no tracking: Mastofoto talks directly to your Mastodon instance from your browser, and your access token never leaves it. <button id="login-info-btn" class="link-button">See the Info page</button> for the full picture — how it works, security details, and that it's open source.</p>
       <p class="hint">📊 This deployment (mastofoto.melandri.net) also runs basic, privacy-friendly analytics via <a href="https://umami.is" target="_blank" rel="noopener noreferrer">Umami</a> to see approximate visit counts — anonymous page views only, never anything about your Mastodon account or activity.</p>
       <p class="copyright">© 2026 Alessandro Melandri</p>

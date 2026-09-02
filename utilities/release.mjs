@@ -158,6 +158,18 @@ if (capture('git rev-parse main') === capture('git rev-parse dev')) {
 }
 
 // ---- production ----
+// production carries a small personal layer on top of main (never merged back
+// into dev/main): a rel="me" profile link, the Umami analytics script tag,
+// and a one-line disclosure on the login page mentioning that analytics run
+// on this specific deployment. A merge from main should never disturb any of
+// these — verify all three survived rather than just checking that *some*
+// personal-layer text is still present somewhere in the file.
+const PERSONAL_LAYER_MARKERS = [
+  { label: 'rel="me" profile link', pattern: 'rel="me"' },
+  { label: 'Umami analytics script tag', pattern: 'cloud.umami.is' },
+  { label: 'login-page Umami disclosure', pattern: 'This deployment' },
+];
+
 if (isAncestor(capture('git rev-parse dev'), 'production')) {
   console.log('production already has this release merged — skipping.');
 } else {
@@ -168,20 +180,20 @@ if (isAncestor(capture('git rev-parse dev'), 'production')) {
   } catch {
     console.error(
       '\nMerging main into production hit a conflict — resolve it, commit, verify the personal layer ' +
-      '(rel="me" / Umami script) is still present, then push manually.'
+      `(${PERSONAL_LAYER_MARKERS.map(m => m.label).join(', ')}) is still intact, then push manually.`
     );
     process.exit(1);
   }
 
-  const personalLayer = capture('git show production:index.html | grep -n \'rel="me"\\|umami\' || true');
-  if (!personalLayer) {
+  const productionIndexHtml = capture('git show production:index.html');
+  const missingMarkers = PERSONAL_LAYER_MARKERS.filter(m => !productionIndexHtml.includes(m.pattern));
+  if (missingMarkers.length) {
     console.error(
-      '\nWarning: could not find the personal layer (rel="me" / umami) in production:index.html after the merge. ' +
-      'Check before pushing.'
+      `\nWarning: the merge into production is missing part of the personal layer: ${missingMarkers.map(m => m.label).join(', ')}. ` +
+      'Check production:index.html before pushing.'
     );
   } else {
-    console.log('Personal layer confirmed present in production:index.html:');
-    console.log(personalLayer);
+    console.log(`Personal layer confirmed intact in production:index.html (${PERSONAL_LAYER_MARKERS.map(m => m.label).join(', ')}).`);
   }
 }
 

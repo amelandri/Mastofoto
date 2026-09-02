@@ -1,6 +1,8 @@
 # Mastofoto
 
-A static web app that shows only the photo posts from one Mastodon list — or your Home timeline — letting you favourite and reblog them — no backend, no database, runs entirely in the browser.
+Your Mastodon feed, but only the photos. Mastofoto turns a Mastodon list — or your Home timeline — into a clean, photo-only feed: every text-only post is filtered out, so you can just browse and enjoy the pictures, then favourite or reblog the ones you like straight from the feed. 
+
+It's a static, single-user app — no backend, no database, no build step, everything runs in your own browser.
 
 > **Built with vibe coding.** This project is developed almost entirely through conversational, natural-language prompting with an AI coding assistant (Claude Code) rather than traditional hand-written development. Features, fixes, and refactors are driven by iterative requests rather than a fixed upfront design — keep that in mind if you're reading the code, reviewing a change, or reporting an issue.
 
