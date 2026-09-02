@@ -201,6 +201,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     scrollSentinel: document.getElementById('scroll-sentinel'),
     loadMoreStatus: document.getElementById('load-more-status'),
     listSetupView: document.getElementById('list-setup-view'),
+    listSetupHomeBtn: document.getElementById('list-setup-home-btn'),
     listSelect: document.getElementById('list-select'),
     useListBtn: document.getElementById('use-list-btn'),
     themeSelect: document.getElementById('theme-select'),
@@ -212,6 +213,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     lightboxImg: document.getElementById('lightbox-img'),
     infoBtn: document.getElementById('info-btn'),
     infoView: document.getElementById('info-view'),
+    infoHomeBtn: document.getElementById('info-home-btn'),
     loginInfoBtn: document.getElementById('login-info-btn'),
     appVersion: document.getElementById('app-version'),
     pullRefresh: document.getElementById('pull-refresh'),
@@ -230,6 +232,21 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   function showView(view) {
     VIEWS.forEach(hide);
     show(view);
+  }
+
+  // "Home Page" links in list-setup-view/info-view used to be plain <a href=".">
+  // anchors, causing a full page reload (re-fetching app.js, re-running
+  // verify_credentials, and re-fetching the timeline from scratch) just to get
+  // back to a view that was already loaded in memory. goHome() instead reuses
+  // showView() like every other navigation in this file.
+  function goHome() {
+    if (!state.token) {
+      showView(el.loginView);
+    } else if (state.currentListId) {
+      showView(el.timelineView);
+    } else {
+      showView(el.listSetupView);
+    }
   }
 
   el.appVersion.textContent = APP_VERSION;
@@ -381,6 +398,8 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
 
   el.infoBtn.addEventListener('click', () => showView(el.infoView));
   el.loginInfoBtn.addEventListener('click', () => showView(el.infoView));
+  el.listSetupHomeBtn.addEventListener('click', goHome);
+  el.infoHomeBtn.addEventListener('click', goHome);
 
   // ---------- login flow ----------
 

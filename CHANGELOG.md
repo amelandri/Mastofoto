@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- The "Home Page" link in Settings and Info now switches views instantly instead of reloading the whole page, removing the brief lag (and refetching the timeline from scratch) that a full reload caused.
 - Corrected avatar display in Timeline members list so border radius is identical to the one used in post header
 
 ## [0.5.3] - 2026-09-01

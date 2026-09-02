@@ -206,6 +206,12 @@ body {
 }
 
 .home-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
   color: var(--link);
   font-size: 0.9rem;
   white-space: nowrap;
