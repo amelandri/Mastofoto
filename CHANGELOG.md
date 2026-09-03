@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - A "Post text size" slider in Settings, letting you scale post body text up or down (±0.5rem in 0.1rem steps) from the default size, with a live preview.
 
+### Fixed
+
+- A photo that fails to load no longer shows the browser's broken-image icon (and, on some mobile browsers, a border) on top of its blurred placeholder — it now just stays blurred.
+- An account avatar that fails to load now shows Mastofoto's own icon instead of the browser's broken-image icon.
+- A custom emoji that fails to load now disappears cleanly instead of showing a broken-image icon inline with the text.
+
 ## [0.5.5] - 2026-09-02
 
 ### Changed

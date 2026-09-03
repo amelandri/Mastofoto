@@ -536,6 +536,8 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
             <span class="member-handle">@${escapeHtml(account.acct)}</span>
           </div>
         `;
+        setImgErrorFallback(item.querySelector('img'), AVATAR_FALLBACK);
+        item.querySelectorAll('img.emoji').forEach(img => setImgErrorFallback(img, TRANSPARENT_PIXEL));
         el.listMembers.appendChild(item);
       });
     } catch (err) {
@@ -783,6 +785,22 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     return pixels;
   }
 
+  // A 1x1 transparent PNG. Swapped in as `src` when a photo or custom emoji
+  // fails to load, so the browser's native broken-image icon/border (and, on
+  // some mobile browsers, a visible alt-text box) never appears. For a photo
+  // this leaves the blurhash background-image as the only visible result;
+  // for an emoji (no blurhash of its own) it just quietly disappears rather
+  // than showing a broken-image glyph inline with text.
+  const TRANSPARENT_PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGBgAAAABQABpfZFQAAAAABJRU5ErkJggg==';
+
+  // Shown in place of an account avatar that fails to load, instead of the
+  // browser's broken-image icon.
+  const AVATAR_FALLBACK = 'assets/favicon.png';
+
+  function setImgErrorFallback(img, fallbackSrc) {
+    img.addEventListener('error', () => { img.src = fallbackSrc; }, { once: true });
+  }
+
   function blurhashToDataUrl(hash) {
     try {
       const size = 32;
@@ -824,9 +842,12 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
           const placeholder = blurhashToDataUrl(att.blurhash);
           if (placeholder) {
             img.style.backgroundImage = `url(${placeholder})`;
-            img.addEventListener('load', () => { img.style.backgroundImage = ''; }, { once: true });
+            const clearPlaceholder = () => { img.style.backgroundImage = ''; };
+            img.addEventListener('load', clearPlaceholder, { once: true });
+            img.addEventListener('error', () => img.removeEventListener('load', clearPlaceholder), { once: true });
           }
         }
+        img.addEventListener('error', () => { img.src = TRANSPARENT_PIXEL; }, { once: true });
         img.src = fullSrc;
         img.alt = att.description || 'Photo without a description';
         img.loading = 'lazy';
@@ -896,6 +917,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
       </div>
       <div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>
     `;
+    setImgErrorFallback(header.querySelector('img'), AVATAR_FALLBACK);
     card.appendChild(header);
 
     const media = buildMediaElement(original);
@@ -948,6 +970,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     }
 
     card.appendChild(actions);
+    card.querySelectorAll('img.emoji').forEach(img => setImgErrorFallback(img, TRANSPARENT_PIXEL));
     return card;
   }
 
