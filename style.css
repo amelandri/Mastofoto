@@ -327,6 +327,20 @@ input[type="text"], select {
   color: var(--text);
 }
 
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--btn-primary-bg);
+}
+
+.font-size-preview {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: var(--post-font-size, 1rem);
+  color: var(--text);
+}
+
 .form-row {
   display: flex;
   gap: 8px;
@@ -574,6 +588,7 @@ a.username:hover {
 }
 
 .status-content {
+  font-size: var(--post-font-size, 1rem);
   word-wrap: break-word;
   line-height: 1.4;
 }

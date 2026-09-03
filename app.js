@@ -10,6 +10,9 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   const PENDING_INSTANCE_KEY = 'mastofoto:pendingInstance';
   const PENDING_STATE_KEY = 'mastofoto:pendingState';
   const THEME_KEY = 'mastofoto:theme';
+  const FONT_SIZE_OFFSET_KEY = 'mastofoto:postFontSizeOffset';
+  const FONT_SIZE_OFFSET_MIN = -0.5;
+  const FONT_SIZE_OFFSET_MAX = 0.5;
   const HOME_TIMELINE_ID = 'home';
 
   // crypto.randomUUID() requires a secure context (HTTPS, or http://localhost)
@@ -40,6 +43,20 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   }
 
   applyTheme(getPreferredTheme());
+
+  // ---------- post text size ----------
+
+  function getPreferredFontSizeOffset() {
+    const stored = parseFloat(localStorage.getItem(FONT_SIZE_OFFSET_KEY));
+    if (Number.isNaN(stored)) return 0;
+    return Math.min(FONT_SIZE_OFFSET_MAX, Math.max(FONT_SIZE_OFFSET_MIN, stored));
+  }
+
+  function applyFontSizeOffset(offset) {
+    document.documentElement.style.setProperty('--post-font-size', `${1 + offset}rem`);
+  }
+
+  applyFontSizeOffset(getPreferredFontSizeOffset());
 
   // ---------- storage helpers ----------
 
@@ -205,6 +222,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     listSelect: document.getElementById('list-select'),
     useListBtn: document.getElementById('use-list-btn'),
     themeSelect: document.getElementById('theme-select'),
+    fontSizeSlider: document.getElementById('font-size-slider'),
     listSetupError: document.getElementById('list-setup-error'),
     noListMessage: document.getElementById('no-list-message'),
     listMembersHeading: document.getElementById('list-members-heading'),
@@ -256,6 +274,13 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     const theme = el.themeSelect.value;
     localStorage.setItem(THEME_KEY, theme);
     applyTheme(theme);
+  });
+
+  el.fontSizeSlider.value = getPreferredFontSizeOffset();
+  el.fontSizeSlider.addEventListener('input', () => {
+    const offset = Math.round(parseFloat(el.fontSizeSlider.value) * 10) / 10;
+    localStorage.setItem(FONT_SIZE_OFFSET_KEY, offset);
+    applyFontSizeOffset(offset);
   });
 
   // ---------- lightbox ----------

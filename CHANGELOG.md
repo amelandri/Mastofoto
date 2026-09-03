@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- A "Post text size" slider in Settings, letting you scale post body text up or down (±0.5rem in 0.1rem steps) from the default size, with a live preview.
+
 ## [0.5.5] - 2026-09-02
 
 ### Changed
