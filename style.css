@@ -327,6 +327,48 @@ input[type="text"], select {
   color: var(--text);
 }
 
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--btn-primary-bg);
+}
+
+.font-size-slider-wrap {
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.font-size-ticks {
+  display: flex;
+  justify-content: space-between;
+  position: absolute;
+  top: 80%;
+  left: 8px;
+  right: 8px;
+  margin-top: px;
+  pointer-events: none;
+}
+
+.font-size-ticks .tick {
+  width: 2px;
+  background: var(--border-strong);
+  border-radius: 1px;
+}
+
+.font-size-ticks .tick-default {
+  width: 3px;
+  height: 9px;
+  background: var(--btn-primary-bg);
+}
+
+.font-size-preview {
+  margin: 30px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: var(--post-font-size, 1rem);
+  color: var(--text);
+}
+
 .form-row {
   display: flex;
   gap: 8px;
@@ -391,6 +433,10 @@ button:hover {
   margin-top: 30px;
   padding-top: 20px;
   border-top: 1px solid var(--border);
+}
+
+.sub-settings-section{
+  margin-bottom: 20px;
 }
 
 .settings-section:first-of-type {
@@ -574,6 +620,7 @@ a.username:hover {
 }
 
 .status-content {
+  font-size: var(--post-font-size, 1rem);
   word-wrap: break-word;
   line-height: 1.4;
 }
