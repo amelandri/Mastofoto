@@ -259,16 +259,35 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   };
 
   // ---------- view switching ----------
-  // Exactly one of these four <section>s is ever visible at a time; showView()
+  // Exactly one of these five <section>s is ever visible at a time; showView()
   // is the single place that enforces that, so a handler can never forget to
   // hide a view it's navigating away from (see CHANGELOG for the logout bug
   // this replaced).
 
   const VIEWS = [el.loginView, el.listSetupView, el.timelineView, el.profileView, el.infoView];
 
+  // Highlighted in the header nav whenever their mapped view is the one
+  // showing — login-view has no persistent nav button, so it's intentionally
+  // absent here (nothing is highlighted while on the login screen).
+  const VIEW_NAV_BUTTONS = new Map([
+    [el.timelineView, el.timelineBtn],
+    [el.profileView, el.profileBtn],
+    [el.listSetupView, el.changeListBtn],
+    [el.infoView, el.infoBtn],
+  ]);
+
   function showView(view) {
     VIEWS.forEach(hide);
     show(view);
+    VIEW_NAV_BUTTONS.forEach((btn, mappedView) => {
+      const isActive = mappedView === view;
+      btn.classList.toggle('active', isActive);
+      if (isActive) {
+        btn.setAttribute('aria-current', 'true');
+      } else {
+        btn.removeAttribute('aria-current');
+      }
+    });
   }
 
   // "Home Page" links in list-setup-view/info-view used to be plain <a href=".">
