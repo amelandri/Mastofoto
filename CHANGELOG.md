@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - A banner at the top of Profile showing your Mastodon cover photo, with your avatar, display name, and handle overlaid on it — a "Show profile banner" setting lets you turn it off, on by default.
 - A "Filter by tags" field in Settings, under a new "Profile" section — enter one or more comma-separated hashtags (e.g. `#cats, #sunsets`) to narrow Profile down to only your posts carrying at least one of them; leave it empty to show all your photo posts, as before. Remembered per account, like your chosen list.
 - A "Show boosts in the feed" setting, on by default — turn it off to exclude boosts entirely (even ones of a post with a photo, not just non-photo ones).
+- A 192×192 home-screen icon and a proper "maskable" variant (safe from being clipped when an Android launcher crops it into a circle/squircle), for broader install-prompt compatibility. The app was already installable as a PWA before this — these just round out the polish.
 
 ### Changed
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mastofoto-shell-v1';
+const CACHE_NAME = 'mastofoto-shell-v2';
 
 const SHELL_FILES = [
   '.',
@@ -9,6 +9,9 @@ const SHELL_FILES = [
   'assets/logo.png',
   'assets/favicon.png',
   'assets/favicon.ico',
+  'assets/app-icon.png',
+  'assets/app-icon-192.png',
+  'assets/app-icon-maskable.png',
 ];
 
 self.addEventListener('install', (event) => {
