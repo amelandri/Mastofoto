@@ -317,6 +317,17 @@ label {
   color: var(--text-secondary);
 }
 
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  cursor: pointer;
+}
+
 input[type="text"], select {
   width: 100%;
   padding: 8px 10px;

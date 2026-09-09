@@ -13,6 +13,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   const FONT_SIZE_OFFSET_KEY = 'mastofoto:postFontSizeOffset';
   const FONT_SIZE_OFFSET_MIN = -0.5;
   const FONT_SIZE_OFFSET_MAX = 0.5;
+  const INCLUDE_REBLOGS_KEY = 'mastofoto:includeReblogs';
   const HOME_TIMELINE_ID = 'home';
 
   // crypto.randomUUID() requires a secure context (HTTPS, or http://localhost)
@@ -57,6 +58,13 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   }
 
   applyFontSizeOffset(getPreferredFontSizeOffset());
+
+  // ---------- feed content settings ----------
+
+  function getPreferredIncludeReblogs() {
+    const stored = localStorage.getItem(INCLUDE_REBLOGS_KEY);
+    return stored === null ? true : stored === 'true';
+  }
 
   // ---------- storage helpers ----------
 
@@ -221,6 +229,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     listSetupHomeBtn: document.getElementById('list-setup-home-btn'),
     listSelect: document.getElementById('list-select'),
     useListBtn: document.getElementById('use-list-btn'),
+    includeReblogsCheckbox: document.getElementById('include-reblogs-checkbox'),
     themeSelect: document.getElementById('theme-select'),
     fontSizeSlider: document.getElementById('font-size-slider'),
     listSetupError: document.getElementById('list-setup-error'),
@@ -281,6 +290,15 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     const offset = Math.round(parseFloat(el.fontSizeSlider.value) * 10) / 10;
     localStorage.setItem(FONT_SIZE_OFFSET_KEY, offset);
     applyFontSizeOffset(offset);
+  });
+
+  el.includeReblogsCheckbox.checked = getPreferredIncludeReblogs();
+  el.includeReblogsCheckbox.addEventListener('change', () => {
+    localStorage.setItem(INCLUDE_REBLOGS_KEY, String(el.includeReblogsCheckbox.checked));
+    // Changes what gets fetched/filtered, not just how it's displayed — unlike
+    // theme/font size, so re-run the current timeline to actually reflect it,
+    // the same reset selectList() already does when switching lists.
+    if (state.currentListId) selectList(state.currentListId);
   });
 
   // ---------- lightbox ----------
@@ -657,7 +675,13 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
       state.nextMaxId = parseNextMaxId(res.headers.get('Link'), statuses);
       state.hasMore = statuses.length > 0;
 
-      const photoStatuses = statuses.filter(hasPhoto);
+      // By default boosts are excluded outright, not just ones without a
+      // photo — a stricter filter than hasPhoto() alone, so a page can come
+      // up empty (or thin) more often on a boost-heavy list/timeline. That's
+      // fine: the lazy-loading below already re-checks after every page and
+      // keeps going regardless of *why* a page had little to show.
+      const includeReblogs = getPreferredIncludeReblogs();
+      const photoStatuses = statuses.filter(s => (includeReblogs || !s.reblog) && hasPhoto(s));
       consecutiveEmptyPages = (append && photoStatuses.length === 0) ? consecutiveEmptyPages + 1 : 0;
 
       if (!append) {

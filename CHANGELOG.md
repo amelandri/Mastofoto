@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- A "Show boosts in the feed" setting, on by default — turn it off to exclude boosts entirely (even ones of a post with a photo, not just non-photo ones).
+
 ## [0.6.0] - 2026-09-08
 
 ### Added
