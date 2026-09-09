@@ -23,6 +23,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 
 - When a photo fails to load for good, its blurred placeholder now sits in a shorter, fixed 4:3 box instead of keeping the space of the original (possibly tall, for a portrait shot) photo.
+- If Profile's very first load ever failed (e.g. a network blip), it got stuck showing that error for the rest of the session with no way to retry. It now retries automatically the next time you open it.
+- Turning off "Show profile banner" now actually stops your cover photo and avatar from being downloaded, not just from being displayed.
+- The new "Timeline" header button no longer shows a blank feed if clicked before you've ever chosen a list or Home timeline — like everywhere else in the app, it takes you to Settings instead.
+- The "About Mastofoto" page now mentions Profile and the "Show boosts" setting.
 
 ## [0.6.0] - 2026-09-08
 

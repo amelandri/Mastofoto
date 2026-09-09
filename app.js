@@ -72,8 +72,27 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     return stored === null ? true : stored === 'true';
   }
 
+  // Set once per login (see startSession()) from the account's own data.
+  // populateProfileBanner() only actually touches the DOM — and, via the
+  // image srcs, only actually fires network requests — once the "Show
+  // profile banner" setting is on, so turning it off avoids downloading the
+  // cover photo and avatar entirely rather than just hiding them afterward.
+  let profileBannerData = null;
+
+  function populateProfileBanner() {
+    if (!profileBannerData) return;
+    el.profileBannerImage.src = profileBannerData.header || TRANSPARENT_PIXEL;
+    setImgErrorFallback(el.profileBannerImage, TRANSPARENT_PIXEL);
+    el.profileBannerAvatar.src = profileBannerData.avatar;
+    setImgErrorFallback(el.profileBannerAvatar, AVATAR_FALLBACK);
+    el.profileBannerDisplayName.innerHTML = profileBannerData.displayNameHtml;
+    el.profileBannerDisplayName.querySelectorAll('img.emoji').forEach(img => setImgErrorFallback(img, TRANSPARENT_PIXEL));
+    el.profileBannerUsername.textContent = profileBannerData.username;
+  }
+
   function applyShowProfileBanner(show) {
     el.profileBanner.classList.toggle('hidden', !show);
+    if (show) populateProfileBanner();
   }
 
   // ---------- storage helpers ----------
@@ -508,7 +527,11 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   el.listSetupHomeBtn.addEventListener('click', goHome);
   el.infoHomeBtn.addEventListener('click', goHome);
 
-  el.timelineBtn.addEventListener('click', () => showView(el.timelineView));
+  // goHome(), not a bare showView(el.timelineView): a first-time user still
+  // mid-initial-setup (no list/timeline chosen yet) has no timeline content
+  // to show — goHome() already knows to send them to Settings instead in
+  // that case, exactly the same fallback the "Home Page" links use.
+  el.timelineBtn.addEventListener('click', goHome);
   el.profileBtn.addEventListener('click', () => {
     showView(el.profileView);
     profileFeed.ensureLoaded();
@@ -658,14 +681,17 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     el.profileTagsInput.value = getInstanceData(instance, 'profileTags') || '';
 
     // Profile's banner (cover image + avatar/name/handle overlay) is static
-    // per account, so it's populated once here rather than by profileFeed —
-    // that engine only ever deals with paginated posts, not account info.
-    el.profileBannerImage.src = account.header_static || account.header || '';
-    setImgErrorFallback(el.profileBannerImage, TRANSPARENT_PIXEL);
-    el.profileBannerAvatar.src = account.avatar;
-    setImgErrorFallback(el.profileBannerAvatar, AVATAR_FALLBACK);
-    el.profileBannerDisplayName.innerHTML = renderEmojiText(account.display_name || account.username, account.emojis);
-    el.profileBannerUsername.textContent = `@${account.acct}`;
+    // per account, computed once here rather than by profileFeed — that
+    // engine only ever deals with paginated posts, not account info. Only
+    // actually populated (and only then does it start fetching images) if
+    // the "Show profile banner" setting is on; see populateProfileBanner().
+    profileBannerData = {
+      header: account.header_static || account.header || '',
+      avatar: account.avatar,
+      displayNameHtml: renderEmojiText(account.display_name || account.username, account.emojis),
+      username: `@${account.acct}`,
+    };
+    if (getPreferredShowProfileBanner()) populateProfileBanner();
 
     const configuredListId = getInstanceData(instance, 'listId');
     if (configuredListId) {
@@ -808,15 +834,22 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
       consecutiveEmptyPages = 0;
       hasLoadedOnce = false;
       container.innerHTML = '';
+      hide(errorEl);
     }
 
     // Only Profile calls this today — Timeline's content is already loaded
     // eagerly by startSession()/selectList(), so its button never needs to
     // trigger a load itself, just show the (already-loading-or-loaded) view.
+    // hasLoadedOnce is set from the *result*, not unconditionally before it's
+    // known — a feed with no pull-to-refresh of its own (Profile) would
+    // otherwise latch "loaded" after a single failed first attempt and never
+    // get another chance to retry for the rest of the session.
     function ensureLoaded() {
       if (hasLoadedOnce) return Promise.resolve(true);
-      hasLoadedOnce = true;
-      return load(false);
+      return load(false).then(ok => {
+        hasLoadedOnce = ok;
+        return ok;
+      });
     }
 
     // Fires its initial callback the moment observe() runs (module-eval

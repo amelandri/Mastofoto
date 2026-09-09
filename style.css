@@ -609,9 +609,9 @@ a.member-name:hover {
   object-fit: cover;
 }
 
-/* Name/handle sit directly on top of the banner photo ("in sovraimpressione"),
-   not below it — a gradient scrim (not a theme token, deliberately the same
-   fixed dark value in both themes, same reasoning as --overlay-bg: it's
+/* Name/handle sit directly on top of the banner photo (overlaid), not below
+   it — a gradient scrim (not a theme token, deliberately the same fixed dark
+   value in both themes, same reasoning as --overlay-bg: it's
    compositing over unpredictable user-photo content, not the app's own
    surface) keeps --accent-contrast (white) text legible regardless of how
    bright the underlying banner image is. */
