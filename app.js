@@ -1001,7 +1001,16 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
             img.addEventListener('error', () => img.removeEventListener('load', clearPlaceholder), { once: true });
           }
         }
-        img.addEventListener('error', () => { img.src = TRANSPARENT_PIXEL; }, { once: true });
+        img.addEventListener('error', () => {
+          img.src = TRANSPARENT_PIXEL;
+          // A single-photo post otherwise reserves space at the original
+          // photo's own aspect ratio (from the width/height attributes set
+          // above), which can be tall for a portrait shot — pointless once
+          // there's no photo left to show, just a blurhash placeholder.
+          // Force a shorter, fixed ratio instead (same 4:3 the multi-photo
+          // grid already uses, so this is a no-op there, not a conflict).
+          img.classList.add('media-load-failed');
+        }, { once: true });
         img.src = fullSrc;
         img.alt = att.description || 'Photo without a description';
         img.loading = 'lazy';

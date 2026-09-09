@@ -702,6 +702,15 @@ img.emoji {
   background-position: center;
 }
 
+/* A single-photo post normally keeps the photo's own aspect ratio (via its
+   width/height attributes); once it's failed to load for good, there's
+   nothing left to preserve that ratio for, so fall back to a shorter, fixed
+   4:3 box (same ratio the multi-photo grid below already uses) instead of
+   whatever tall shape a portrait photo happened to be. */
+.status-media img.media-load-failed {
+  aspect-ratio: 4 / 3;
+}
+
 .status-media-grid {
   grid-template-columns: repeat(var(--media-columns, 2), minmax(0, 1fr));
 }

@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - The header now highlights whichever of Timeline/Profile/Settings/Info is currently open, so it's always clear where you are.
 
+### Fixed
+
+- When a photo fails to load for good, its blurred placeholder now sits in a shorter, fixed 4:3 box instead of keeping the space of the original (possibly tall, for a portrait shot) photo.
+
 ## [0.6.0] - 2026-09-08
 
 ### Added
