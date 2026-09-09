@@ -105,6 +105,14 @@
         </div>
 
       <div class="settings-section">
+        <h3>Profile</h3>
+        <label class="checkbox-label"><input type="checkbox" id="show-profile-banner-checkbox" checked> Show profile banner</label>
+        <label for="profile-tags-input">Filter by tags (optional)</label>
+        <input type="text" id="profile-tags-input" placeholder="#cats, #sunsets">
+        <p class="hint">Only your posts tagged with at least one of these will show in Profile. Leave empty to show all your photo posts.</p>
+      </div>
+
+      <div class="settings-section">
         <h3>Timeline</h3>
         <label for="list-select" class="sr-only">Timeline</label>
         <div class="form-row">
@@ -117,14 +125,6 @@
         <h4 id="list-members-heading" class="hint hidden">Members</h4>
         <ul id="list-members"></ul>
       </div>
-
-      <div class="settings-section">
-        <h3>Profile</h3>
-        <label for="profile-tags-input">Filter by tags (optional)</label>
-        <input type="text" id="profile-tags-input" placeholder="#cats, #sunsets">
-        <p class="hint">Only your posts tagged with at least one of these will show in Profile. Leave empty to show all your photo posts.</p>
-      </div>
-
 
     </div>
   </section>
@@ -143,6 +143,16 @@
   </section>
 
   <section id="profile-view" class="hidden">
+    <div id="profile-banner">
+      <img id="profile-banner-image" alt="">
+      <div id="profile-banner-info">
+        <img id="profile-banner-avatar" alt="">
+        <div id="profile-banner-names">
+          <div id="profile-banner-displayname"></div>
+          <div id="profile-banner-username"></div>
+        </div>
+      </div>
+    </div>
     <div id="profile-container">
       <p id="profile-error" class="error hidden" role="alert"></p>
       <div id="profile-statuses"></div>

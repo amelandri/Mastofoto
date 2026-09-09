@@ -14,6 +14,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   const FONT_SIZE_OFFSET_MIN = -0.5;
   const FONT_SIZE_OFFSET_MAX = 0.5;
   const INCLUDE_REBLOGS_KEY = 'mastofoto:includeReblogs';
+  const SHOW_PROFILE_BANNER_KEY = 'mastofoto:showProfileBanner';
   const HOME_TIMELINE_ID = 'home';
 
   // crypto.randomUUID() requires a secure context (HTTPS, or http://localhost)
@@ -64,6 +65,15 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   function getPreferredIncludeReblogs() {
     const stored = localStorage.getItem(INCLUDE_REBLOGS_KEY);
     return stored === null ? true : stored === 'true';
+  }
+
+  function getPreferredShowProfileBanner() {
+    const stored = localStorage.getItem(SHOW_PROFILE_BANNER_KEY);
+    return stored === null ? true : stored === 'true';
+  }
+
+  function applyShowProfileBanner(show) {
+    el.profileBanner.classList.toggle('hidden', !show);
   }
 
   // ---------- storage helpers ----------
@@ -235,6 +245,12 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     profileError: document.getElementById('profile-error'),
     profileScrollSentinel: document.getElementById('profile-scroll-sentinel'),
     profileLoadMoreStatus: document.getElementById('profile-load-more-status'),
+    profileBanner: document.getElementById('profile-banner'),
+    showProfileBannerCheckbox: document.getElementById('show-profile-banner-checkbox'),
+    profileBannerImage: document.getElementById('profile-banner-image'),
+    profileBannerAvatar: document.getElementById('profile-banner-avatar'),
+    profileBannerDisplayName: document.getElementById('profile-banner-displayname'),
+    profileBannerUsername: document.getElementById('profile-banner-username'),
     listSetupView: document.getElementById('list-setup-view'),
     listSetupHomeBtn: document.getElementById('list-setup-home-btn'),
     listSelect: document.getElementById('list-select'),
@@ -329,6 +345,14 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     // theme/font size, so re-run the current timeline to actually reflect it,
     // the same reset selectList() already does when switching lists.
     if (state.currentListId) selectList(state.currentListId);
+  });
+
+  el.showProfileBannerCheckbox.checked = getPreferredShowProfileBanner();
+  applyShowProfileBanner(el.showProfileBannerCheckbox.checked);
+  el.showProfileBannerCheckbox.addEventListener('change', () => {
+    const show = el.showProfileBannerCheckbox.checked;
+    localStorage.setItem(SHOW_PROFILE_BANNER_KEY, String(show));
+    applyShowProfileBanner(show);
   });
 
   el.profileTagsInput.addEventListener('change', () => {
@@ -632,6 +656,16 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     el.currentInstance.textContent = instance;
     el.profileTagsInput.value = getInstanceData(instance, 'profileTags') || '';
 
+    // Profile's banner (cover image + avatar/name/handle overlay) is static
+    // per account, so it's populated once here rather than by profileFeed —
+    // that engine only ever deals with paginated posts, not account info.
+    el.profileBannerImage.src = account.header_static || account.header || '';
+    setImgErrorFallback(el.profileBannerImage, TRANSPARENT_PIXEL);
+    el.profileBannerAvatar.src = account.avatar;
+    setImgErrorFallback(el.profileBannerAvatar, AVATAR_FALLBACK);
+    el.profileBannerDisplayName.innerHTML = renderEmojiText(account.display_name || account.username, account.emojis);
+    el.profileBannerUsername.textContent = `@${account.acct}`;
+
     const configuredListId = getInstanceData(instance, 'listId');
     if (configuredListId) {
       showView(el.timelineView);
@@ -858,7 +892,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     },
     onFreshLoad: null,
     renderCard(status) {
-      return renderStatusCard(status, false, false);
+      return renderStatusCard(status, false, false, false);
     },
   });
 
@@ -1041,7 +1075,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   const BOOST_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
   const LINK_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
 
-  function renderStatusCard(status, isNew = false, showActions = true) {
+  function renderStatusCard(status, isNew = false, showActions = true, showAuthor = true) {
     const isReblog = !!status.reblog;
     const original = isReblog ? status.reblog : status;
 
@@ -1062,24 +1096,37 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
       card.appendChild(banner);
     }
 
-    const profileUrl = original.account.url;
-    const profileIsSafe = !!(profileUrl && isHttpUrl(profileUrl));
-    const displayName = renderEmojiText(original.account.display_name || original.account.username, original.account.emojis);
-    const avatarImg = `<img src="${escapeAttr(original.account.avatar)}" alt="">`;
-
     const header = document.createElement('div');
-    header.className = 'status-header';
-    header.innerHTML = `
-      ${profileIsSafe ? `<a href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">${avatarImg}</a>` : avatarImg}
-      <div class="status-author">
-        <div class="display-name">${profileIsSafe ? `<a href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">${displayName}</a>` : displayName}</div>
-        ${profileIsSafe
-          ? `<a class="username" href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">@${escapeHtml(original.account.acct)}</a>`
-          : `<div class="username">@${escapeHtml(original.account.acct)}</div>`}
-      </div>
-      <div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>
-    `;
-    setImgErrorFallback(header.querySelector('img'), AVATAR_FALLBACK);
+
+    if (showAuthor) {
+      const profileUrl = original.account.url;
+      const profileIsSafe = !!(profileUrl && isHttpUrl(profileUrl));
+      const displayName = renderEmojiText(original.account.display_name || original.account.username, original.account.emojis);
+      const avatarImg = `<img src="${escapeAttr(original.account.avatar)}" alt="">`;
+
+      header.className = 'status-header';
+      header.innerHTML = `
+        ${profileIsSafe ? `<a href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">${avatarImg}</a>` : avatarImg}
+        <div class="status-author">
+          <div class="display-name">${profileIsSafe ? `<a href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">${displayName}</a>` : displayName}</div>
+          ${profileIsSafe
+            ? `<a class="username" href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">@${escapeHtml(original.account.acct)}</a>`
+            : `<div class="username">@${escapeHtml(original.account.acct)}</div>`}
+        </div>
+        <div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>
+      `;
+      setImgErrorFallback(header.querySelector('img'), AVATAR_FALLBACK);
+    } else {
+      // Profile already knows whose posts these are — repeating your own
+      // avatar/name on every single card is just noise there. Only the date
+      // remains, laid out as plain flowed text rather than reusing the
+      // avatar/name layout's position:absolute corner anchor (see
+      // .status-header.status-header-date-only in style.css), since that
+      // anchor exists specifically to coexist with the avatar/name row this
+      // variant doesn't have.
+      header.className = 'status-header status-header-date-only';
+      header.innerHTML = `<div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>`;
+    }
     card.appendChild(header);
 
     const media = buildMediaElement(original);

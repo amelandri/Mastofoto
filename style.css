@@ -22,6 +22,7 @@
   --nav-active: var(--link);
   --shadow: rgba(0, 0, 0, 0.1);
   --overlay-bg: rgba(0, 0, 0, 0.9);
+  --photo-scrim: rgba(0, 0, 0, 0.65);
   --lightbox-btn-bg: rgba(255, 255, 255, 0.15);
   --lightbox-btn-bg-hover: rgba(255, 255, 255, 0.3);
 }
@@ -48,6 +49,7 @@
   --nav-active: var(--text);
   --shadow: rgba(0, 0, 0, 0);
   --overlay-bg: rgba(0, 0, 0, 0.9);
+  --photo-scrim: rgba(0, 0, 0, 0.65);
   --lightbox-btn-bg: rgba(255, 255, 255, 0.15);
   --lightbox-btn-bg-hover: rgba(255, 255, 255, 0.3);
 }
@@ -557,6 +559,71 @@ a.member-name:hover {
   min-width: 0;
 }
 
+#profile-banner {
+  position: relative;
+  aspect-ratio: 3 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: var(--btn-secondary-bg);
+}
+
+#profile-banner-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Name/handle sit directly on top of the banner photo ("in sovraimpressione"),
+   not below it — a gradient scrim (not a theme token, deliberately the same
+   fixed dark value in both themes, same reasoning as --overlay-bg: it's
+   compositing over unpredictable user-photo content, not the app's own
+   surface) keeps --accent-contrast (white) text legible regardless of how
+   bright the underlying banner image is. */
+#profile-banner-info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 16px;
+  background: linear-gradient(to top, var(--photo-scrim), transparent);
+}
+
+#profile-banner-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--accent-contrast);
+  background: var(--btn-secondary-bg);
+}
+
+#profile-banner-names {
+  min-width: 0;
+  color: var(--accent-contrast);
+}
+
+#profile-banner-displayname {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#profile-banner-username {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .status-card {
   position: relative;
   background: var(--surface);
@@ -596,6 +663,21 @@ a.member-name:hover {
   gap: 10px;
   margin-bottom: 14px;
   padding-right: 110px;
+}
+
+/* Profile's cards (no avatar/author row — see renderStatusCard()'s
+   showAuthor param): .status-date's usual position:absolute corner anchor
+   exists to coexist with that row and the "New" badge, neither of which
+   exist here, so it's flowed normally instead — the higher specificity
+   (two classes) beats both this desktop padding-right and the mobile
+   override below unconditionally, regardless of source order. */
+.status-header.status-header-date-only {
+  padding-right: 0;
+  justify-content: flex-end;
+}
+
+.status-header.status-header-date-only .status-date {
+  position: static;
 }
 
 .status-header img {
@@ -848,6 +930,21 @@ img.emoji {
 
   #app-header {
     padding: 10px 10px 0 10px;
+  }
+
+  #profile-banner-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+  }
+
+  #profile-banner-info {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  #profile-banner-username {
+    font-size: 0.75rem;
   }
 
   #app{
