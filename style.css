@@ -533,7 +533,8 @@ a.member-name:hover {
   transform: rotate(180deg);
 }
 
-#timeline-container {
+#timeline-container,
+#profile-container {
   min-width: 0;
 }
 
@@ -790,11 +791,13 @@ img.emoji {
   align-items: center;
 }
 
-#scroll-sentinel {
+#scroll-sentinel,
+#profile-scroll-sentinel {
   height: 1px;
 }
 
-#load-more-status {
+#load-more-status,
+#profile-load-more-status {
   text-align: center;
   margin: 10px auto;
 }
@@ -821,6 +824,13 @@ img.emoji {
 
   #app{
     padding: 10px;
+  }
+
+  #session-info {
+    /* 5 icon-only buttons (was 3, before Timeline/Profile) at the 12px
+       desktop gap leaves ~0 spare width on a 320px viewport next to the
+       logo — tighten it here rather than shrinking the buttons themselves. */
+    gap: 6px;
   }
 
   #session-info button {

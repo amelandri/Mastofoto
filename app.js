@@ -193,11 +193,14 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   const state = {
     instance: null,
     token: null,
+    accountId: null,
     currentListId: null,
-    nextMaxId: null,
-    lastSeenBefore: null,
-    hasMore: true,
   };
+
+  // Timeline-only "New" badge marker — Profile never tracks this (own posts
+  // don't need a "new since last visit" concept). Kept outside `state` since
+  // nothing else needs to read/write it.
+  let timelineLastSeenBefore = null;
 
   function lastSeenKey(listId) {
     return `lastSeen:${listId}`;
@@ -218,6 +221,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     loginError: document.getElementById('login-error'),
     loginView: document.getElementById('login-view'),
     timelineView: document.getElementById('timeline-view'),
+    timelineBtn: document.getElementById('timeline-btn'),
     currentInstance: document.getElementById('current-instance'),
     logoutBtn: document.getElementById('logout-btn'),
     changeListBtn: document.getElementById('change-list-btn'),
@@ -225,6 +229,12 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     timelineError: document.getElementById('timeline-error'),
     scrollSentinel: document.getElementById('scroll-sentinel'),
     loadMoreStatus: document.getElementById('load-more-status'),
+    profileBtn: document.getElementById('profile-btn'),
+    profileView: document.getElementById('profile-view'),
+    profileStatuses: document.getElementById('profile-statuses'),
+    profileError: document.getElementById('profile-error'),
+    profileScrollSentinel: document.getElementById('profile-scroll-sentinel'),
+    profileLoadMoreStatus: document.getElementById('profile-load-more-status'),
     listSetupView: document.getElementById('list-setup-view'),
     listSetupHomeBtn: document.getElementById('list-setup-home-btn'),
     listSelect: document.getElementById('list-select'),
@@ -254,7 +264,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   // hide a view it's navigating away from (see CHANGELOG for the logout bug
   // this replaced).
 
-  const VIEWS = [el.loginView, el.listSetupView, el.timelineView, el.infoView];
+  const VIEWS = [el.loginView, el.listSetupView, el.timelineView, el.profileView, el.infoView];
 
   function showView(view) {
     VIEWS.forEach(hide);
@@ -425,7 +435,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
       el.pullRefreshLabel.textContent = 'Refreshing…';
       setPullHeight(50);
       try {
-        await loadTimeline(false);
+        await timelineFeed.load(false);
       } finally {
         setPullHeight(0);
         el.pullRefresh.classList.remove('ready');
@@ -443,6 +453,12 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   el.loginInfoBtn.addEventListener('click', () => showView(el.infoView));
   el.listSetupHomeBtn.addEventListener('click', goHome);
   el.infoHomeBtn.addEventListener('click', goHome);
+
+  el.timelineBtn.addEventListener('click', () => showView(el.timelineView));
+  el.profileBtn.addEventListener('click', () => {
+    showView(el.profileView);
+    profileFeed.ensureLoaded();
+  });
 
   // ---------- login flow ----------
 
@@ -498,12 +514,18 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     if (state.instance) clearInstanceData(state.instance);
     state.instance = null;
     state.token = null;
+    state.accountId = null;
     state.currentListId = null;
+    hide(el.timelineBtn);
+    hide(el.profileBtn);
     hide(el.changeListBtn);
     hide(el.logoutBtn);
     showView(el.loginView);
     el.instanceInput.value = '';
     el.currentInstance.textContent = '';
+    // A different account may log in next — never leave stale photos from
+    // this one sitting in the Profile feed.
+    profileFeed.reset();
   });
 
   el.changeListBtn.addEventListener('click', () => {
@@ -564,12 +586,17 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   }
 
   async function startSession(instance, token) {
-    // verify token is still valid
-    await apiFetch(instance, token, '/api/v1/accounts/verify_credentials');
+    // verify token is still valid, and capture the account's own id (needed
+    // for the Profile view's GET /api/v1/accounts/:id/statuses)
+    const res = await apiFetch(instance, token, '/api/v1/accounts/verify_credentials');
+    const account = await res.json();
     state.instance = instance;
     state.token = token;
+    state.accountId = account.id;
     localStorage.setItem('mastofoto:lastInstance', instance);
 
+    show(el.timelineBtn);
+    show(el.profileBtn);
     show(el.changeListBtn);
     show(el.logoutBtn);
     el.currentInstance.textContent = instance;
@@ -622,115 +649,183 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
 
   async function selectList(listId) {
     state.currentListId = listId;
-    state.nextMaxId = null;
-    state.hasMore = true;
-    consecutiveEmptyPages = 0;
-    el.statuses.innerHTML = '';
-
-    await loadTimeline(false);
+    timelineFeed.reset();
+    await timelineFeed.load(false);
   }
 
-  // ---------- timeline loading (lazy load) ----------
+  // ---------- feed engine (shared by Timeline and Profile) ----------
   //
-  // loadTimeline() is called from three independent places: a fresh list
-  // selection, pull-to-refresh, and auto-continuation triggered by scrolling
-  // near the bottom. A plain boolean "busy" guard would let one of these
-  // silently no-op if it overlaps another (e.g. pull-to-refresh flashing
-  // "Refreshing…" and resetting without ever actually refreshing, if a
-  // background auto-load happened to be in flight at that exact moment) —
-  // so every call instead goes through a shared queue: it always eventually
-  // runs, in order, never dropped.
+  // load() is called from multiple independent places per feed — a fresh
+  // selection/first visit, pull-to-refresh (Timeline only), and auto-
+  // continuation triggered by scrolling near the bottom. A plain boolean
+  // "busy" guard would let one of these silently no-op if it overlaps
+  // another (e.g. pull-to-refresh flashing "Refreshing…" and resetting
+  // without ever actually refreshing, if a background auto-load happened to
+  // be in flight at that exact moment) — so every call instead goes through
+  // a shared per-feed queue: it always eventually runs, in order, never
+  // dropped. Timeline and Profile each get their own independent instance
+  // (own queue, own cursor, own circuit breaker, own IntersectionObserver)
+  // via createFeedEngine(), so neither can ever refetch or clobber the
+  // other's already-loaded content.
   const AUTO_LOAD_MARGIN_PX = 400;
   const MAX_CONSECUTIVE_EMPTY_PAGES = 20; // defensive backstop against a pagination bug or a pathologically photo-sparse timeline, not a UX pacing device — should never be hit in normal use
 
-  let pendingTimelineCalls = 0;
-  let timelineQueue = Promise.resolve();
-  let consecutiveEmptyPages = 0;
+  function createFeedEngine({ view, container, errorEl, sentinel, loadMoreEl, buildPath, filterStatuses, onFreshLoad, renderCard }) {
+    const cursor = { nextMaxId: null, hasMore: true };
+    let pendingCalls = 0;
+    let queue = Promise.resolve();
+    let consecutiveEmptyPages = 0;
+    let hasLoadedOnce = false;
 
-  function loadTimeline(append) {
-    pendingTimelineCalls++;
-    if (append) show(el.loadMoreStatus);
-    const run = timelineQueue
-      .then(() => runLoadTimeline(append))
-      .finally(() => { pendingTimelineCalls--; });
-    timelineQueue = run.catch(() => {}); // keep the chain alive even if this run failed
-    run.then(ok => {
-      const continuing = ok && maybeLoadMore();
-      if (append && !continuing) hide(el.loadMoreStatus);
-    });
-    return run;
+    function renderStatuses(statuses, append) {
+      if (!append) container.innerHTML = '';
+      statuses.forEach(status => container.appendChild(renderCard(status)));
+    }
+
+    async function runLoad(append) {
+      try {
+        hide(errorEl);
+        const res = await apiFetch(state.instance, state.token, buildPath(append, cursor.nextMaxId));
+        const statuses = await res.json();
+        cursor.nextMaxId = parseNextMaxId(res.headers.get('Link'), statuses);
+        cursor.hasMore = statuses.length > 0;
+
+        const photoStatuses = filterStatuses(statuses);
+        consecutiveEmptyPages = (append && photoStatuses.length === 0) ? consecutiveEmptyPages + 1 : 0;
+
+        if (!append && onFreshLoad) onFreshLoad(photoStatuses);
+
+        renderStatuses(photoStatuses, append);
+        return true;
+      } catch (err) {
+        showError(errorEl, err.message);
+        return false;
+      }
+    }
+
+    function sentinelNearViewport() {
+      const rect = sentinel.getBoundingClientRect();
+      return rect.top <= window.innerHeight + AUTO_LOAD_MARGIN_PX;
+    }
+
+    // Called after every load() call settles. Covers both auto-paging
+    // through pages with zero photos (the sentinel doesn't move, so an
+    // IntersectionObserver alone would never refire) and a short feed that
+    // fits on one screen after a fresh load (no enter/exit transition either).
+    function maybeLoadMore() {
+      if (pendingCalls > 0) return false;
+      if (view.classList.contains('hidden')) return false; // must precede the geometry check below: a hidden ancestor collapses to a zeroed rect, which would otherwise read as "near the top"
+      if (!cursor.hasMore) return false;
+      if (consecutiveEmptyPages >= MAX_CONSECUTIVE_EMPTY_PAGES) return false;
+      if (!sentinelNearViewport()) return false;
+      load(true);
+      return true;
+    }
+
+    function load(append) {
+      pendingCalls++;
+      if (append) show(loadMoreEl);
+      const run = queue
+        .then(() => runLoad(append))
+        .finally(() => { pendingCalls--; });
+      queue = run.catch(() => {}); // keep the chain alive even if this run failed
+      run.then(ok => {
+        const continuing = ok && maybeLoadMore();
+        if (append && !continuing) hide(loadMoreEl);
+      });
+      return run;
+    }
+
+    function reset() {
+      cursor.nextMaxId = null;
+      cursor.hasMore = true;
+      consecutiveEmptyPages = 0;
+      hasLoadedOnce = false;
+      container.innerHTML = '';
+    }
+
+    // Only Profile calls this today — Timeline's content is already loaded
+    // eagerly by startSession()/selectList(), so its button never needs to
+    // trigger a load itself, just show the (already-loading-or-loaded) view.
+    function ensureLoaded() {
+      if (hasLoadedOnce) return Promise.resolve(true);
+      hasLoadedOnce = true;
+      return load(false);
+    }
+
+    // Fires its initial callback the moment observe() runs (module-eval
+    // time, before login) — maybeLoadMore()'s hidden-view check is what
+    // prevents a premature fetch before a session/list even exists.
+    new IntersectionObserver(() => maybeLoadMore(), {
+      rootMargin: `0px 0px ${AUTO_LOAD_MARGIN_PX}px 0px`,
+    }).observe(sentinel);
+
+    return { load, reset, ensureLoaded, maybeLoadMore };
   }
 
-  async function runLoadTimeline(append) {
-    try {
-      hide(el.timelineError);
+  const timelineFeed = createFeedEngine({
+    view: el.timelineView,
+    container: el.statuses,
+    errorEl: el.timelineError,
+    sentinel: el.scrollSentinel,
+    loadMoreEl: el.loadMoreStatus,
+    buildPath(append, nextMaxId) {
       const path = state.currentListId === HOME_TIMELINE_ID
         ? '/api/v1/timelines/home'
         : `/api/v1/timelines/list/${state.currentListId}`;
       const params = new URLSearchParams({ limit: '20' });
-      if (append && state.nextMaxId) params.set('max_id', state.nextMaxId);
-
-      const res = await apiFetch(state.instance, state.token, `${path}?${params.toString()}`);
-      const statuses = await res.json();
-      state.nextMaxId = parseNextMaxId(res.headers.get('Link'), statuses);
-      state.hasMore = statuses.length > 0;
-
-      // By default boosts are excluded outright, not just ones without a
-      // photo — a stricter filter than hasPhoto() alone, so a page can come
-      // up empty (or thin) more often on a boost-heavy list/timeline. That's
-      // fine: the lazy-loading below already re-checks after every page and
-      // keeps going regardless of *why* a page had little to show.
+      if (append && nextMaxId) params.set('max_id', nextMaxId);
+      return `${path}?${params.toString()}`;
+    },
+    // By default boosts are excluded outright, not just ones without a
+    // photo — a stricter filter than hasPhoto() alone, so a page can come
+    // up empty (or thin) more often on a boost-heavy list/timeline. That's
+    // fine: this engine already re-checks after every page and keeps going
+    // regardless of *why* a page had little to show.
+    filterStatuses(statuses) {
       const includeReblogs = getPreferredIncludeReblogs();
-      const photoStatuses = statuses.filter(s => (includeReblogs || !s.reblog) && hasPhoto(s));
-      consecutiveEmptyPages = (append && photoStatuses.length === 0) ? consecutiveEmptyPages + 1 : 0;
-
-      if (!append) {
-        state.lastSeenBefore = getInstanceData(state.instance, lastSeenKey(state.currentListId));
-        if (photoStatuses.length) {
-          saveInstanceData(state.instance, { [lastSeenKey(state.currentListId)]: photoStatuses[0].created_at });
-        }
+      return statuses.filter(s => (includeReblogs || !s.reblog) && hasPhoto(s));
+    },
+    onFreshLoad(photoStatuses) {
+      timelineLastSeenBefore = getInstanceData(state.instance, lastSeenKey(state.currentListId));
+      if (photoStatuses.length) {
+        saveInstanceData(state.instance, { [lastSeenKey(state.currentListId)]: photoStatuses[0].created_at });
       }
-
-      renderStatuses(photoStatuses, append);
-      return true;
-    } catch (err) {
-      showError(el.timelineError, err.message);
-      return false;
-    }
-  }
-
-  function sentinelNearViewport() {
-    const rect = el.scrollSentinel.getBoundingClientRect();
-    return rect.top <= window.innerHeight + AUTO_LOAD_MARGIN_PX;
-  }
-
-  // Called after every loadTimeline() call settles. Covers both auto-paging
-  // through pages with zero photos (the sentinel doesn't move, so an
-  // IntersectionObserver alone would never refire) and a short list that
-  // fits on one screen after a fresh load (no enter/exit transition either).
-  function maybeLoadMore() {
-    if (pendingTimelineCalls > 0) return false;
-    if (el.timelineView.classList.contains('hidden')) return false; // must precede the geometry check below: a hidden ancestor collapses to a zeroed rect, which would otherwise read as "near the top"
-    if (!state.hasMore) return false;
-    if (consecutiveEmptyPages >= MAX_CONSECUTIVE_EMPTY_PAGES) return false;
-    if (!sentinelNearViewport()) return false;
-    loadTimeline(true);
-    return true;
-  }
-
-  const scrollObserver = new IntersectionObserver(() => maybeLoadMore(), {
-    rootMargin: `0px 0px ${AUTO_LOAD_MARGIN_PX}px 0px`,
+    },
+    renderCard(status) {
+      const isNew = !!timelineLastSeenBefore && new Date(status.created_at) > new Date(timelineLastSeenBefore);
+      return renderStatusCard(status, isNew, true);
+    },
   });
-  scrollObserver.observe(el.scrollSentinel);
 
-  // ---------- rendering ----------
-
-  function renderStatuses(statuses, append) {
-    if (!append) el.statuses.innerHTML = '';
-    statuses.forEach(status => {
-      el.statuses.appendChild(renderStatusCard(status));
-    });
-  }
+  // Profile shows only the logged-in account's own photo posts — boosts are
+  // always excluded server-side (exclude_reblogs=true) regardless of the
+  // "Show boosts in the feed" setting above, which only ever applies to
+  // Timeline. No "New" badge (own posts don't need a "since your last
+  // visit" marker, so no onFreshLoad) and no Favourite/Reblog actions, just
+  // "View post" (see renderStatusCard's third parameter).
+  const profileFeed = createFeedEngine({
+    view: el.profileView,
+    container: el.profileStatuses,
+    errorEl: el.profileError,
+    sentinel: el.profileScrollSentinel,
+    loadMoreEl: el.profileLoadMoreStatus,
+    buildPath(append, nextMaxId) {
+      const params = new URLSearchParams({ limit: '20', only_media: 'true', exclude_reblogs: 'true' });
+      if (append && nextMaxId) params.set('max_id', nextMaxId);
+      return `/api/v1/accounts/${state.accountId}/statuses?${params.toString()}`;
+    },
+    // only_media=true admits any media attachment, not specifically images
+    // (a status can carry 1-4 images, or exactly one video/gifv/audio) — so
+    // hasPhoto() is still required here, it's not redundant with that param.
+    filterStatuses(statuses) {
+      return statuses.filter(hasPhoto);
+    },
+    onFreshLoad: null,
+    renderCard(status) {
+      return renderStatusCard(status, false, false);
+    },
+  });
 
   // ---------- blurhash ----------
   // Reimplementation of the public blurhash decode algorithm (https://blurha.sh) —
@@ -902,10 +997,9 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   const BOOST_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
   const LINK_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
 
-  function renderStatusCard(status) {
+  function renderStatusCard(status, isNew = false, showActions = true) {
     const isReblog = !!status.reblog;
     const original = isReblog ? status.reblog : status;
-    const isNew = !!state.lastSeenBefore && new Date(status.created_at) > new Date(state.lastSeenBefore);
 
     const card = document.createElement('div');
     card.className = isNew ? 'status-card is-new' : 'status-card';
@@ -968,20 +1062,22 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     const actions = document.createElement('div');
     actions.className = 'status-actions';
 
-    const favBtn = document.createElement('button');
-    favBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${FAV_ICON_SVG}</span><span class="sr-only">Favourite,</span> <span class="btn-count">${original.favourites_count}</span>`;
-    if (original.favourited) favBtn.classList.add('active');
-    favBtn.addEventListener('click', () => toggleFavourite(original.id, favBtn));
-    actions.appendChild(favBtn);
+    if (showActions) {
+      const favBtn = document.createElement('button');
+      favBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${FAV_ICON_SVG}</span><span class="sr-only">Favourite,</span> <span class="btn-count">${original.favourites_count}</span>`;
+      if (original.favourited) favBtn.classList.add('active');
+      favBtn.addEventListener('click', () => toggleFavourite(original.id, favBtn));
+      actions.appendChild(favBtn);
 
-    const boostBtn = document.createElement('button');
-    boostBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span><span class="sr-only">Reblog,</span> <span class="btn-count">${original.reblogs_count}</span>`;
-    if (original.reblogged) boostBtn.classList.add('active');
-    if (original.visibility === 'private' || original.visibility === 'direct') {
-      boostBtn.disabled = true;
+      const boostBtn = document.createElement('button');
+      boostBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span><span class="sr-only">Reblog,</span> <span class="btn-count">${original.reblogs_count}</span>`;
+      if (original.reblogged) boostBtn.classList.add('active');
+      if (original.visibility === 'private' || original.visibility === 'direct') {
+        boostBtn.disabled = true;
+      }
+      boostBtn.addEventListener('click', () => toggleReblog(original.id, boostBtn));
+      actions.appendChild(boostBtn);
     }
-    boostBtn.addEventListener('click', () => toggleReblog(original.id, boostBtn));
-    actions.appendChild(boostBtn);
 
     if (original.url && isHttpUrl(original.url)) {
       const originalLink = document.createElement('a');
