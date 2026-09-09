@@ -1,4 +1,4 @@
-import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, mediaGridColumns } from './pure.mjs';
+import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, mediaGridColumns, parseTagFilter, statusMatchesTagFilter } from './pure.mjs';
 
 (() => {
   'use strict';
@@ -246,6 +246,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     noListMessage: document.getElementById('no-list-message'),
     listMembersHeading: document.getElementById('list-members-heading'),
     listMembers: document.getElementById('list-members'),
+    profileTagsInput: document.getElementById('profile-tags-input'),
     lightbox: document.getElementById('lightbox'),
     lightboxImg: document.getElementById('lightbox-img'),
     infoBtn: document.getElementById('info-btn'),
@@ -328,6 +329,16 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     // theme/font size, so re-run the current timeline to actually reflect it,
     // the same reset selectList() already does when switching lists.
     if (state.currentListId) selectList(state.currentListId);
+  });
+
+  el.profileTagsInput.addEventListener('change', () => {
+    saveInstanceData(state.instance, { profileTags: el.profileTagsInput.value });
+    // Unlike the reblog checkbox above, Profile is lazy (only ever fetched
+    // via ensureLoaded() on first visit — see the feed engine section below)
+    // rather than eagerly kept warm in the background like Timeline, so
+    // there's nothing to eagerly re-run here: reset() just marks it stale,
+    // and the next visit to Profile naturally fetches with the new filter.
+    profileFeed.reset();
   });
 
   // ---------- lightbox ----------
@@ -619,6 +630,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     show(el.changeListBtn);
     show(el.logoutBtn);
     el.currentInstance.textContent = instance;
+    el.profileTagsInput.value = getInstanceData(instance, 'profileTags') || '';
 
     const configuredListId = getInstanceData(instance, 'listId');
     if (configuredListId) {
@@ -837,8 +849,12 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     // only_media=true admits any media attachment, not specifically images
     // (a status can carry 1-4 images, or exactly one video/gifv/audio) — so
     // hasPhoto() is still required here, it's not redundant with that param.
+    // The tag filter (Settings > Profile, per-instance) is read fresh on
+    // every page rather than cached, so a change takes effect on the very
+    // next load without needing its own separate invalidation path.
     filterStatuses(statuses) {
-      return statuses.filter(hasPhoto);
+      const tags = parseTagFilter(getInstanceData(state.instance, 'profileTags'));
+      return statuses.filter(s => hasPhoto(s) && statusMatchesTagFilter(s, tags));
     },
     onFreshLoad: null,
     renderCard(status) {

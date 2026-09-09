@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - A "Show boosts in the feed" setting, on by default — turn it off to exclude boosts entirely (even ones of a post with a photo, not just non-photo ones).
 - A new Profile view showing your own photo posts, alongside (not instead of) your chosen list/Home timeline — boosts are always excluded here regardless of the "Show boosts" setting, and posts show only a "View post" action (no favourite/reblog). A new "Timeline" header button was also added, so the main feed is reachable directly at any time, not just as the default screen after logging in. Switching between Timeline and Profile never re-fetches or discards the other's already-loaded content.
+- A "Filter by tags" field in Settings, under a new "Profile" section — enter one or more comma-separated hashtags (e.g. `#cats, #sunsets`) to narrow Profile down to only your posts carrying at least one of them; leave it empty to show all your photo posts, as before. Remembered per account, like your chosen list.
+
+### Changed
+
 - The header now highlights whichever of Timeline/Profile/Settings/Info is currently open, so it's always clear where you are.
 
 ## [0.6.0] - 2026-09-08
