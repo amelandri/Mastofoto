@@ -8,16 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- A "Show boosts in the feed" setting, on by default — turn it off to exclude boosts entirely (even ones of a post with a photo, not just non-photo ones).
 - A new Profile view showing your own photo posts, alongside (not instead of) your chosen list/Home timeline — boosts are always excluded here regardless of the "Show boosts" setting, and posts show only a "View post" action (no favourite/reblog). A new "Timeline" header button was also added, so the main feed is reachable directly at any time, not just as the default screen after logging in. Switching between Timeline and Profile never re-fetches or discards the other's already-loaded content.
-- A "Filter by tags" field in Settings, under a new "Profile" section — enter one or more comma-separated hashtags (e.g. `#cats, #sunsets`) to narrow Profile down to only your posts carrying at least one of them; leave it empty to show all your photo posts, as before. Remembered per account, like your chosen list.
 - A banner at the top of Profile showing your Mastodon cover photo, with your avatar, display name, and handle overlaid on it — a "Show profile banner" setting lets you turn it off, on by default.
+- A "Filter by tags" field in Settings, under a new "Profile" section — enter one or more comma-separated hashtags (e.g. `#cats, #sunsets`) to narrow Profile down to only your posts carrying at least one of them; leave it empty to show all your photo posts, as before. Remembered per account, like your chosen list.
+- A "Show boosts in the feed" setting, on by default — turn it off to exclude boosts entirely (even ones of a post with a photo, not just non-photo ones).
 
 ### Changed
 
 - The header now highlights whichever of Timeline/Profile/Settings/Info is currently open, so it's always clear where you are.
 - Profile no longer repeats your own avatar and name on every post — they're your own posts, so only the date remains.
-- In Settings, the "Profile" section now comes before "Timeline", and both are organized into "Display" (on/off toggles) and "Filters" (what content shows) subsections instead of a flat list of controls.
+- Settings is now ordered Timeline, Profile, Appearance, and the Timeline/Profile sections are organized into "Display" (on/off toggles) and "Filters" (what content shows) subsections instead of a flat list of controls.
+- The list-members preview in Settings is now collapsed by default — click "Members" to expand it.
 
 ### Fixed
 

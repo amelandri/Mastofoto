@@ -498,7 +498,21 @@ button:hover {
 }
 
 #list-members-heading {
-  margin: 20px 0 8px;
+  margin: 20px 0 0;
+}
+
+#list-members-heading summary {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+#list-members-heading summary:hover {
+  color: var(--text);
+}
+
+#list-members-heading[open] summary {
+  margin-bottom: 8px;
 }
 
 #list-members {

@@ -609,6 +609,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
 
   async function loadListMembers(listId) {
     el.listMembers.innerHTML = '';
+    el.listMembersHeading.open = false;
     hide(el.listMembersHeading);
     try {
       const res = await apiFetch(state.instance, state.token, `/api/v1/lists/${listId}/accounts?limit=80`);
