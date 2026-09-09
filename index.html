@@ -101,29 +101,45 @@
             </div>
           </div>
           <p class="font-size-preview" aria-hidden="true">The quick brown fox jumps over the lazy dog.</p>
-          </div>
         </div>
+      </div>
 
       <div class="settings-section">
         <h3>Profile</h3>
-        <label class="checkbox-label"><input type="checkbox" id="show-profile-banner-checkbox" checked> Show profile banner</label>
-        <label for="profile-tags-input">Filter by tags (optional)</label>
-        <input type="text" id="profile-tags-input" placeholder="#cats, #sunsets">
-        <p class="hint">Only your posts tagged with at least one of these will show in Profile. Leave empty to show all your photo posts.</p>
+
+        <div class="settings-subsection">
+          <h4 class="settings-subsection-heading">Display</h4>
+          <label class="checkbox-label"><input type="checkbox" id="show-profile-banner-checkbox" checked> Show profile banner</label>
+        </div>
+
+        <div class="settings-subsection">
+          <h4 class="settings-subsection-heading">Filters</h4>
+          <label for="profile-tags-input">Tags (optional)</label>
+          <input type="text" id="profile-tags-input" placeholder="#cats, #sunsets">
+          <p class="hint">Only your posts tagged with at least one of these will show in Profile. Leave empty to show all your photo posts.</p>
+        </div>
       </div>
 
       <div class="settings-section">
         <h3>Timeline</h3>
-        <label for="list-select" class="sr-only">Timeline</label>
-        <div class="form-row">
-          <select id="list-select"></select>
-          <button id="use-list-btn">Use this timeline</button>
+
+        <div class="settings-subsection">
+          <h4 class="settings-subsection-heading">Display</h4>
+          <label class="checkbox-label"><input type="checkbox" id="include-reblogs-checkbox" checked> Show boosts in the feed</label>
         </div>
-        <p id="list-setup-error" class="error hidden" role="alert"></p>
-        <label class="checkbox-label"><input type="checkbox" id="include-reblogs-checkbox" checked> Show boosts in the feed</label>
-        <p id="no-list-message" class="hint hidden" aria-live="polite">No lists found — you can still follow your Home timeline, or create a list on Mastodon with the accounts you want to follow.</p>
-        <h4 id="list-members-heading" class="hint hidden">Members</h4>
-        <ul id="list-members"></ul>
+
+        <div class="settings-subsection">
+          <h4 class="settings-subsection-heading">Filters</h4>
+          <label for="list-select" class="sr-only">Timeline</label>
+          <div class="form-row">
+            <select id="list-select"></select>
+            <button id="use-list-btn">Use this timeline</button>
+          </div>
+          <p id="list-setup-error" class="error hidden" role="alert"></p>
+          <p id="no-list-message" class="hint hidden" aria-live="polite">No lists found — you can still follow your Home timeline, or create a list on Mastodon with the accounts you want to follow.</p>
+          <h5 id="list-members-heading" class="hint hidden">Members</h5>
+          <ul id="list-members"></ul>
+        </div>
       </div>
 
     </div>

@@ -477,6 +477,26 @@ button:hover {
   border-top: none;
 }
 
+/* A labeled grouping *within* a .settings-section (e.g. Profile's "Display"
+   vs "Filters") — unlike the plain, unlabeled .sub-settings-section above,
+   this one carries its own small heading, so the visual hierarchy reads
+   clearly at three distinct levels: h3 section title (full text color,
+   default weight) > this muted, uppercase, letter-spaced label > the
+   controls/field labels themselves (also muted, but not uppercase — see
+   the plain `label` rule). */
+.settings-subsection + .settings-subsection {
+  margin-top: 24px;
+}
+
+.settings-subsection-heading {
+  margin: 0 0 10px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 #list-members-heading {
   margin: 20px 0 8px;
 }

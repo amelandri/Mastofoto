@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - The header now highlights whichever of Timeline/Profile/Settings/Info is currently open, so it's always clear where you are.
 - Profile no longer repeats your own avatar and name on every post — they're your own posts, so only the date remains.
-- In Settings, the "Profile" section now comes before "Timeline".
+- In Settings, the "Profile" section now comes before "Timeline", and both are organized into "Display" (on/off toggles) and "Filters" (what content shows) subsections instead of a flat list of controls.
 
 ### Fixed
 
