@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-11
+
 ### Added
 
 - A new Profile view showing your own photo posts, alongside (not instead of) your chosen list/Home timeline — boosts are always excluded here regardless of the "Show boosts" setting. Posts show their favourite/boost counts and a "View post" action, but favouriting/reblogging isn't offered from Profile itself. A new "Timeline" header button was also added, so the main feed is reachable directly at any time, not just as the default screen after logging in. Switching between Timeline and Profile never re-fetches or discards the other's already-loaded content.
