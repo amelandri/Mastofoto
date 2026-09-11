@@ -905,19 +905,28 @@ img.emoji {
 }
 
 .status-actions button,
-.status-actions .view-original-btn {
+.status-actions .view-original-btn,
+.status-actions .status-stat {
   margin-top: 0;
   background: var(--btn-secondary-bg);
   color: var(--text);
   font-size: 0.85rem;
 }
 
-.status-actions .view-original-btn {
+.status-actions .view-original-btn,
+.status-actions .status-stat {
   display: inline-flex;
   align-items: center;
   padding: 8px 16px;
   border-radius: 6px;
   text-decoration: none;
+}
+
+/* Profile's read-only favourite/boost counts: same icon+count shape as the
+   real buttons, but never a <button> — there's no action to take, so no
+   pointer cursor, no hover/active state, no click handler. */
+.status-actions .status-stat {
+  cursor: default;
 }
 
 .status-actions button.active {

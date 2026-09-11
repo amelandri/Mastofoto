@@ -1109,7 +1109,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   const BOOST_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
   const LINK_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
 
-  function renderStatusCard(status, isNew = false, showActions = true, showAuthor = true) {
+  function renderStatusCard(status, isNew = false, interactiveActions = true, showAuthor = true) {
     const isReblog = !!status.reblog;
     const original = isReblog ? status.reblog : status;
 
@@ -1187,7 +1187,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     const actions = document.createElement('div');
     actions.className = 'status-actions';
 
-    if (showActions) {
+    if (interactiveActions) {
       const favBtn = document.createElement('button');
       favBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${FAV_ICON_SVG}</span><span class="sr-only">Favourite,</span> <span class="btn-count">${original.favourites_count}</span>`;
       if (original.favourited) favBtn.classList.add('active');
@@ -1202,6 +1202,22 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
       }
       boostBtn.addEventListener('click', () => toggleReblog(original.id, boostBtn));
       actions.appendChild(boostBtn);
+    } else {
+      // Profile: show the counts (how many favourites/boosts a post got)
+      // without offering the action — plain <span>s, not <button>s, since
+      // they're not interactive controls, just stats. Same icon+count markup
+      // shape as the real buttons above, but .status-stat declares its own
+      // box styling explicitly (same reason .view-original-btn does below:
+      // non-button elements don't inherit the bare `button {}` reset).
+      const favStat = document.createElement('span');
+      favStat.className = 'status-stat';
+      favStat.innerHTML = `<span class="btn-icon" aria-hidden="true">${FAV_ICON_SVG}</span><span class="sr-only">Favourites:</span> <span class="btn-count">${original.favourites_count}</span>`;
+      actions.appendChild(favStat);
+
+      const boostStat = document.createElement('span');
+      boostStat.className = 'status-stat';
+      boostStat.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span><span class="sr-only">Boosts:</span> <span class="btn-count">${original.reblogs_count}</span>`;
+      actions.appendChild(boostStat);
     }
 
     if (original.url && isHttpUrl(original.url)) {
