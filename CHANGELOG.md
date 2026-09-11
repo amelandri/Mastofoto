@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-11
+
+### Added
+
+- A new Profile view showing your own photo posts, alongside (not instead of) your chosen list/Home timeline — boosts are always excluded here regardless of the "Show boosts" setting. Posts show their favourite/boost counts and a "View post" action, but favouriting/reblogging isn't offered from Profile itself. A new "Timeline" header button was also added, so the main feed is reachable directly at any time, not just as the default screen after logging in. Switching between Timeline and Profile never re-fetches or discards the other's already-loaded content.
+- A banner at the top of Profile showing your Mastodon cover photo, with your avatar, display name, and handle overlaid on it — a "Show profile banner" setting lets you turn it off, on by default.
+- A "Filter by tags" field in Settings, under a new "Profile" section — enter one or more comma-separated hashtags (e.g. `#cats, #sunsets`) to narrow Profile down to only your posts carrying at least one of them; leave it empty to show all your photo posts, as before. Remembered per account, like your chosen list.
+- A "Show boosts in the feed" setting, on by default — turn it off to exclude boosts entirely (even ones of a post with a photo, not just non-photo ones).
+- A 192×192 home-screen icon and a proper "maskable" variant (safe from being clipped when an Android launcher crops it into a circle/squircle), for broader install-prompt compatibility. The app was already installable as a PWA before this — these just round out the polish.
+
+### Changed
+
+- The header now highlights whichever of Timeline/Profile/Settings/Info is currently open, so it's always clear where you are.
+- Profile no longer repeats your own avatar and name on every post — they're your own posts, so only the date remains.
+- Settings is now ordered Timeline, Profile, Appearance, and the Timeline/Profile sections are organized into "Display" (on/off toggles) and "Filters" (what content shows) subsections instead of a flat list of controls.
+- The list-members preview in Settings is now collapsed by default — click "Members" to expand it.
+
+### Fixed
+
+- When a photo fails to load for good, its blurred placeholder now sits in a shorter, fixed 4:3 box instead of keeping the space of the original (possibly tall, for a portrait shot) photo.
+- If Profile's very first load ever failed (e.g. a network blip), it got stuck showing that error for the rest of the session with no way to retry. It now retries automatically the next time you open it.
+- Turning off "Show profile banner" now actually stops your cover photo and avatar from being downloaded, not just from being displayed.
+- The new "Timeline" header button no longer shows a blank feed if clicked before you've ever chosen a list or Home timeline — like everywhere else in the app, it takes you to Settings instead.
+- The "About Mastofoto" page now mentions Profile and the "Show boosts" setting.
+
 ## [0.6.0] - 2026-09-08
 
 ### Added

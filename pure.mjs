@@ -53,6 +53,34 @@ export function hasPhoto(status) {
   return (original.media_attachments || []).some(att => att.type === 'image');
 }
 
+// Parses the Profile tag filter's raw input ("#cats, #Sunset, ,#travel")
+// into a clean list of lowercase tag names with no leading "#" ("cats",
+// "sunset", "travel") — a status's own tags come back the same way (Status
+// objects carry a `tags: [{ name, url }]` array where `name` has no "#"),
+// so both sides of the comparison end up in the same shape without either
+// needing special-casing. Whitespace-only/empty entries (from stray commas)
+// are dropped; an empty/missing input returns [] (no filtering).
+export function parseTagFilter(raw) {
+  if (!raw) return [];
+  return raw
+    .split(',')
+    .map(tag => tag.trim().replace(/^#/, '').toLowerCase())
+    .filter(Boolean);
+}
+
+// True if `tags` is empty (no filter set — everything matches) or `status`
+// carries at least one tag in common with it (OR, not AND: matching *any*
+// listed tag is enough). Assumes `status` is never a reblog wrapper — true
+// for every caller today (Profile excludes boosts outright via the API's
+// own exclude_reblogs=true), so this doesn't look inside `status.reblog`
+// the way hasPhoto() does; revisit if it's ever reused somewhere reblogs
+// can reach.
+export function statusMatchesTagFilter(status, tags) {
+  if (!tags.length) return true;
+  const statusTags = (status.tags || []).map(tag => tag.name.toLowerCase());
+  return tags.some(tag => statusTags.includes(tag));
+}
+
 export function parseNextMaxId(linkHeader, statuses) {
   if (linkHeader) {
     const match = linkHeader.split(',').find(part => part.includes('rel="next"'));

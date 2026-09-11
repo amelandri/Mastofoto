@@ -1,9 +1,9 @@
-import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, mediaGridColumns } from './pure.mjs';
+import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, mediaGridColumns, parseTagFilter, statusMatchesTagFilter } from './pure.mjs';
 
 (() => {
   'use strict';
 
-  const APP_VERSION = '0.6.0';
+  const APP_VERSION = '0.7.0';
   const REDIRECT_URI = window.location.origin + window.location.pathname;
   const SCOPES = 'read write:favourites write:statuses';
   const APP_NAME = 'Mastofoto';
@@ -13,6 +13,8 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   const FONT_SIZE_OFFSET_KEY = 'mastofoto:postFontSizeOffset';
   const FONT_SIZE_OFFSET_MIN = -0.5;
   const FONT_SIZE_OFFSET_MAX = 0.5;
+  const INCLUDE_REBLOGS_KEY = 'mastofoto:includeReblogs';
+  const SHOW_PROFILE_BANNER_KEY = 'mastofoto:showProfileBanner';
   const HOME_TIMELINE_ID = 'home';
 
   // crypto.randomUUID() requires a secure context (HTTPS, or http://localhost)
@@ -57,6 +59,41 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   }
 
   applyFontSizeOffset(getPreferredFontSizeOffset());
+
+  // ---------- feed content settings ----------
+
+  function getPreferredIncludeReblogs() {
+    const stored = localStorage.getItem(INCLUDE_REBLOGS_KEY);
+    return stored === null ? true : stored === 'true';
+  }
+
+  function getPreferredShowProfileBanner() {
+    const stored = localStorage.getItem(SHOW_PROFILE_BANNER_KEY);
+    return stored === null ? true : stored === 'true';
+  }
+
+  // Set once per login (see startSession()) from the account's own data.
+  // populateProfileBanner() only actually touches the DOM — and, via the
+  // image srcs, only actually fires network requests — once the "Show
+  // profile banner" setting is on, so turning it off avoids downloading the
+  // cover photo and avatar entirely rather than just hiding them afterward.
+  let profileBannerData = null;
+
+  function populateProfileBanner() {
+    if (!profileBannerData) return;
+    el.profileBannerImage.src = profileBannerData.header || TRANSPARENT_PIXEL;
+    setImgErrorFallback(el.profileBannerImage, TRANSPARENT_PIXEL);
+    el.profileBannerAvatar.src = profileBannerData.avatar;
+    setImgErrorFallback(el.profileBannerAvatar, AVATAR_FALLBACK);
+    el.profileBannerDisplayName.innerHTML = profileBannerData.displayNameHtml;
+    el.profileBannerDisplayName.querySelectorAll('img.emoji').forEach(img => setImgErrorFallback(img, TRANSPARENT_PIXEL));
+    el.profileBannerUsername.textContent = profileBannerData.username;
+  }
+
+  function applyShowProfileBanner(show) {
+    el.profileBanner.classList.toggle('hidden', !show);
+    if (show) populateProfileBanner();
+  }
 
   // ---------- storage helpers ----------
 
@@ -185,11 +222,14 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   const state = {
     instance: null,
     token: null,
+    accountId: null,
     currentListId: null,
-    nextMaxId: null,
-    lastSeenBefore: null,
-    hasMore: true,
   };
+
+  // Timeline-only "New" badge marker — Profile never tracks this (own posts
+  // don't need a "new since last visit" concept). Kept outside `state` since
+  // nothing else needs to read/write it.
+  let timelineLastSeenBefore = null;
 
   function lastSeenKey(listId) {
     return `lastSeen:${listId}`;
@@ -210,6 +250,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     loginError: document.getElementById('login-error'),
     loginView: document.getElementById('login-view'),
     timelineView: document.getElementById('timeline-view'),
+    timelineBtn: document.getElementById('timeline-btn'),
     currentInstance: document.getElementById('current-instance'),
     logoutBtn: document.getElementById('logout-btn'),
     changeListBtn: document.getElementById('change-list-btn'),
@@ -217,16 +258,30 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     timelineError: document.getElementById('timeline-error'),
     scrollSentinel: document.getElementById('scroll-sentinel'),
     loadMoreStatus: document.getElementById('load-more-status'),
+    profileBtn: document.getElementById('profile-btn'),
+    profileView: document.getElementById('profile-view'),
+    profileStatuses: document.getElementById('profile-statuses'),
+    profileError: document.getElementById('profile-error'),
+    profileScrollSentinel: document.getElementById('profile-scroll-sentinel'),
+    profileLoadMoreStatus: document.getElementById('profile-load-more-status'),
+    profileBanner: document.getElementById('profile-banner'),
+    showProfileBannerCheckbox: document.getElementById('show-profile-banner-checkbox'),
+    profileBannerImage: document.getElementById('profile-banner-image'),
+    profileBannerAvatar: document.getElementById('profile-banner-avatar'),
+    profileBannerDisplayName: document.getElementById('profile-banner-displayname'),
+    profileBannerUsername: document.getElementById('profile-banner-username'),
     listSetupView: document.getElementById('list-setup-view'),
     listSetupHomeBtn: document.getElementById('list-setup-home-btn'),
     listSelect: document.getElementById('list-select'),
     useListBtn: document.getElementById('use-list-btn'),
+    includeReblogsCheckbox: document.getElementById('include-reblogs-checkbox'),
     themeSelect: document.getElementById('theme-select'),
     fontSizeSlider: document.getElementById('font-size-slider'),
     listSetupError: document.getElementById('list-setup-error'),
     noListMessage: document.getElementById('no-list-message'),
     listMembersHeading: document.getElementById('list-members-heading'),
     listMembers: document.getElementById('list-members'),
+    profileTagsInput: document.getElementById('profile-tags-input'),
     lightbox: document.getElementById('lightbox'),
     lightboxImg: document.getElementById('lightbox-img'),
     infoBtn: document.getElementById('info-btn'),
@@ -240,16 +295,35 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   };
 
   // ---------- view switching ----------
-  // Exactly one of these four <section>s is ever visible at a time; showView()
+  // Exactly one of these five <section>s is ever visible at a time; showView()
   // is the single place that enforces that, so a handler can never forget to
   // hide a view it's navigating away from (see CHANGELOG for the logout bug
   // this replaced).
 
-  const VIEWS = [el.loginView, el.listSetupView, el.timelineView, el.infoView];
+  const VIEWS = [el.loginView, el.listSetupView, el.timelineView, el.profileView, el.infoView];
+
+  // Highlighted in the header nav whenever their mapped view is the one
+  // showing — login-view has no persistent nav button, so it's intentionally
+  // absent here (nothing is highlighted while on the login screen).
+  const VIEW_NAV_BUTTONS = new Map([
+    [el.timelineView, el.timelineBtn],
+    [el.profileView, el.profileBtn],
+    [el.listSetupView, el.changeListBtn],
+    [el.infoView, el.infoBtn],
+  ]);
 
   function showView(view) {
     VIEWS.forEach(hide);
     show(view);
+    VIEW_NAV_BUTTONS.forEach((btn, mappedView) => {
+      const isActive = mappedView === view;
+      btn.classList.toggle('active', isActive);
+      if (isActive) {
+        btn.setAttribute('aria-current', 'true');
+      } else {
+        btn.removeAttribute('aria-current');
+      }
+    });
   }
 
   // "Home Page" links in list-setup-view/info-view used to be plain <a href=".">
@@ -281,6 +355,33 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     const offset = Math.round(parseFloat(el.fontSizeSlider.value) * 10) / 10;
     localStorage.setItem(FONT_SIZE_OFFSET_KEY, offset);
     applyFontSizeOffset(offset);
+  });
+
+  el.includeReblogsCheckbox.checked = getPreferredIncludeReblogs();
+  el.includeReblogsCheckbox.addEventListener('change', () => {
+    localStorage.setItem(INCLUDE_REBLOGS_KEY, String(el.includeReblogsCheckbox.checked));
+    // Changes what gets fetched/filtered, not just how it's displayed — unlike
+    // theme/font size, so re-run the current timeline to actually reflect it,
+    // the same reset selectList() already does when switching lists.
+    if (state.currentListId) selectList(state.currentListId);
+  });
+
+  el.showProfileBannerCheckbox.checked = getPreferredShowProfileBanner();
+  applyShowProfileBanner(el.showProfileBannerCheckbox.checked);
+  el.showProfileBannerCheckbox.addEventListener('change', () => {
+    const show = el.showProfileBannerCheckbox.checked;
+    localStorage.setItem(SHOW_PROFILE_BANNER_KEY, String(show));
+    applyShowProfileBanner(show);
+  });
+
+  el.profileTagsInput.addEventListener('change', () => {
+    saveInstanceData(state.instance, { profileTags: el.profileTagsInput.value });
+    // Unlike the reblog checkbox above, Profile is lazy (only ever fetched
+    // via ensureLoaded() on first visit — see the feed engine section below)
+    // rather than eagerly kept warm in the background like Timeline, so
+    // there's nothing to eagerly re-run here: reset() just marks it stale,
+    // and the next visit to Profile naturally fetches with the new filter.
+    profileFeed.reset();
   });
 
   // ---------- lightbox ----------
@@ -407,7 +508,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
       el.pullRefreshLabel.textContent = 'Refreshing…';
       setPullHeight(50);
       try {
-        await loadTimeline(false);
+        await timelineFeed.load(false);
       } finally {
         setPullHeight(0);
         el.pullRefresh.classList.remove('ready');
@@ -425,6 +526,16 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   el.loginInfoBtn.addEventListener('click', () => showView(el.infoView));
   el.listSetupHomeBtn.addEventListener('click', goHome);
   el.infoHomeBtn.addEventListener('click', goHome);
+
+  // goHome(), not a bare showView(el.timelineView): a first-time user still
+  // mid-initial-setup (no list/timeline chosen yet) has no timeline content
+  // to show — goHome() already knows to send them to Settings instead in
+  // that case, exactly the same fallback the "Home Page" links use.
+  el.timelineBtn.addEventListener('click', goHome);
+  el.profileBtn.addEventListener('click', () => {
+    showView(el.profileView);
+    profileFeed.ensureLoaded();
+  });
 
   // ---------- login flow ----------
 
@@ -480,12 +591,18 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     if (state.instance) clearInstanceData(state.instance);
     state.instance = null;
     state.token = null;
+    state.accountId = null;
     state.currentListId = null;
+    hide(el.timelineBtn);
+    hide(el.profileBtn);
     hide(el.changeListBtn);
     hide(el.logoutBtn);
     showView(el.loginView);
     el.instanceInput.value = '';
     el.currentInstance.textContent = '';
+    // A different account may log in next — never leave stale photos from
+    // this one sitting in the Profile feed.
+    profileFeed.reset();
   });
 
   el.changeListBtn.addEventListener('click', () => {
@@ -515,6 +632,7 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
 
   async function loadListMembers(listId) {
     el.listMembers.innerHTML = '';
+    el.listMembersHeading.open = false;
     hide(el.listMembersHeading);
     try {
       const res = await apiFetch(state.instance, state.token, `/api/v1/lists/${listId}/accounts?limit=80`);
@@ -546,15 +664,34 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   }
 
   async function startSession(instance, token) {
-    // verify token is still valid
-    await apiFetch(instance, token, '/api/v1/accounts/verify_credentials');
+    // verify token is still valid, and capture the account's own id (needed
+    // for the Profile view's GET /api/v1/accounts/:id/statuses)
+    const res = await apiFetch(instance, token, '/api/v1/accounts/verify_credentials');
+    const account = await res.json();
     state.instance = instance;
     state.token = token;
+    state.accountId = account.id;
     localStorage.setItem('mastofoto:lastInstance', instance);
 
+    show(el.timelineBtn);
+    show(el.profileBtn);
     show(el.changeListBtn);
     show(el.logoutBtn);
     el.currentInstance.textContent = instance;
+    el.profileTagsInput.value = getInstanceData(instance, 'profileTags') || '';
+
+    // Profile's banner (cover image + avatar/name/handle overlay) is static
+    // per account, computed once here rather than by profileFeed — that
+    // engine only ever deals with paginated posts, not account info. Only
+    // actually populated (and only then does it start fetching images) if
+    // the "Show profile banner" setting is on; see populateProfileBanner().
+    profileBannerData = {
+      header: account.header_static || account.header || '',
+      avatar: account.avatar,
+      displayNameHtml: renderEmojiText(account.display_name || account.username, account.emojis),
+      username: `@${account.acct}`,
+    };
+    if (getPreferredShowProfileBanner()) populateProfileBanner();
 
     const configuredListId = getInstanceData(instance, 'listId');
     if (configuredListId) {
@@ -604,109 +741,194 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
 
   async function selectList(listId) {
     state.currentListId = listId;
-    state.nextMaxId = null;
-    state.hasMore = true;
-    consecutiveEmptyPages = 0;
-    el.statuses.innerHTML = '';
-
-    await loadTimeline(false);
+    timelineFeed.reset();
+    await timelineFeed.load(false);
   }
 
-  // ---------- timeline loading (lazy load) ----------
+  // ---------- feed engine (shared by Timeline and Profile) ----------
   //
-  // loadTimeline() is called from three independent places: a fresh list
-  // selection, pull-to-refresh, and auto-continuation triggered by scrolling
-  // near the bottom. A plain boolean "busy" guard would let one of these
-  // silently no-op if it overlaps another (e.g. pull-to-refresh flashing
-  // "Refreshing…" and resetting without ever actually refreshing, if a
-  // background auto-load happened to be in flight at that exact moment) —
-  // so every call instead goes through a shared queue: it always eventually
-  // runs, in order, never dropped.
+  // load() is called from multiple independent places per feed — a fresh
+  // selection/first visit, pull-to-refresh (Timeline only), and auto-
+  // continuation triggered by scrolling near the bottom. A plain boolean
+  // "busy" guard would let one of these silently no-op if it overlaps
+  // another (e.g. pull-to-refresh flashing "Refreshing…" and resetting
+  // without ever actually refreshing, if a background auto-load happened to
+  // be in flight at that exact moment) — so every call instead goes through
+  // a shared per-feed queue: it always eventually runs, in order, never
+  // dropped. Timeline and Profile each get their own independent instance
+  // (own queue, own cursor, own circuit breaker, own IntersectionObserver)
+  // via createFeedEngine(), so neither can ever refetch or clobber the
+  // other's already-loaded content.
   const AUTO_LOAD_MARGIN_PX = 400;
   const MAX_CONSECUTIVE_EMPTY_PAGES = 20; // defensive backstop against a pagination bug or a pathologically photo-sparse timeline, not a UX pacing device — should never be hit in normal use
 
-  let pendingTimelineCalls = 0;
-  let timelineQueue = Promise.resolve();
-  let consecutiveEmptyPages = 0;
+  function createFeedEngine({ view, container, errorEl, sentinel, loadMoreEl, buildPath, filterStatuses, onFreshLoad, renderCard }) {
+    const cursor = { nextMaxId: null, hasMore: true };
+    let pendingCalls = 0;
+    let queue = Promise.resolve();
+    let consecutiveEmptyPages = 0;
+    let hasLoadedOnce = false;
 
-  function loadTimeline(append) {
-    pendingTimelineCalls++;
-    if (append) show(el.loadMoreStatus);
-    const run = timelineQueue
-      .then(() => runLoadTimeline(append))
-      .finally(() => { pendingTimelineCalls--; });
-    timelineQueue = run.catch(() => {}); // keep the chain alive even if this run failed
-    run.then(ok => {
-      const continuing = ok && maybeLoadMore();
-      if (append && !continuing) hide(el.loadMoreStatus);
-    });
-    return run;
+    function renderStatuses(statuses, append) {
+      if (!append) container.innerHTML = '';
+      statuses.forEach(status => container.appendChild(renderCard(status)));
+    }
+
+    async function runLoad(append) {
+      try {
+        hide(errorEl);
+        const res = await apiFetch(state.instance, state.token, buildPath(append, cursor.nextMaxId));
+        const statuses = await res.json();
+        cursor.nextMaxId = parseNextMaxId(res.headers.get('Link'), statuses);
+        cursor.hasMore = statuses.length > 0;
+
+        const photoStatuses = filterStatuses(statuses);
+        consecutiveEmptyPages = (append && photoStatuses.length === 0) ? consecutiveEmptyPages + 1 : 0;
+
+        if (!append && onFreshLoad) onFreshLoad(photoStatuses);
+
+        renderStatuses(photoStatuses, append);
+        return true;
+      } catch (err) {
+        showError(errorEl, err.message);
+        return false;
+      }
+    }
+
+    function sentinelNearViewport() {
+      const rect = sentinel.getBoundingClientRect();
+      return rect.top <= window.innerHeight + AUTO_LOAD_MARGIN_PX;
+    }
+
+    // Called after every load() call settles. Covers both auto-paging
+    // through pages with zero photos (the sentinel doesn't move, so an
+    // IntersectionObserver alone would never refire) and a short feed that
+    // fits on one screen after a fresh load (no enter/exit transition either).
+    function maybeLoadMore() {
+      if (pendingCalls > 0) return false;
+      if (view.classList.contains('hidden')) return false; // must precede the geometry check below: a hidden ancestor collapses to a zeroed rect, which would otherwise read as "near the top"
+      if (!cursor.hasMore) return false;
+      if (consecutiveEmptyPages >= MAX_CONSECUTIVE_EMPTY_PAGES) return false;
+      if (!sentinelNearViewport()) return false;
+      load(true);
+      return true;
+    }
+
+    function load(append) {
+      pendingCalls++;
+      if (append) show(loadMoreEl);
+      const run = queue
+        .then(() => runLoad(append))
+        .finally(() => { pendingCalls--; });
+      queue = run.catch(() => {}); // keep the chain alive even if this run failed
+      run.then(ok => {
+        const continuing = ok && maybeLoadMore();
+        if (append && !continuing) hide(loadMoreEl);
+      });
+      return run;
+    }
+
+    function reset() {
+      cursor.nextMaxId = null;
+      cursor.hasMore = true;
+      consecutiveEmptyPages = 0;
+      hasLoadedOnce = false;
+      container.innerHTML = '';
+      hide(errorEl);
+    }
+
+    // Only Profile calls this today — Timeline's content is already loaded
+    // eagerly by startSession()/selectList(), so its button never needs to
+    // trigger a load itself, just show the (already-loading-or-loaded) view.
+    // hasLoadedOnce is set from the *result*, not unconditionally before it's
+    // known — a feed with no pull-to-refresh of its own (Profile) would
+    // otherwise latch "loaded" after a single failed first attempt and never
+    // get another chance to retry for the rest of the session.
+    function ensureLoaded() {
+      if (hasLoadedOnce) return Promise.resolve(true);
+      return load(false).then(ok => {
+        hasLoadedOnce = ok;
+        return ok;
+      });
+    }
+
+    // Fires its initial callback the moment observe() runs (module-eval
+    // time, before login) — maybeLoadMore()'s hidden-view check is what
+    // prevents a premature fetch before a session/list even exists.
+    new IntersectionObserver(() => maybeLoadMore(), {
+      rootMargin: `0px 0px ${AUTO_LOAD_MARGIN_PX}px 0px`,
+    }).observe(sentinel);
+
+    return { load, reset, ensureLoaded, maybeLoadMore };
   }
 
-  async function runLoadTimeline(append) {
-    try {
-      hide(el.timelineError);
+  const timelineFeed = createFeedEngine({
+    view: el.timelineView,
+    container: el.statuses,
+    errorEl: el.timelineError,
+    sentinel: el.scrollSentinel,
+    loadMoreEl: el.loadMoreStatus,
+    buildPath(append, nextMaxId) {
       const path = state.currentListId === HOME_TIMELINE_ID
         ? '/api/v1/timelines/home'
         : `/api/v1/timelines/list/${state.currentListId}`;
       const params = new URLSearchParams({ limit: '20' });
-      if (append && state.nextMaxId) params.set('max_id', state.nextMaxId);
-
-      const res = await apiFetch(state.instance, state.token, `${path}?${params.toString()}`);
-      const statuses = await res.json();
-      state.nextMaxId = parseNextMaxId(res.headers.get('Link'), statuses);
-      state.hasMore = statuses.length > 0;
-
-      const photoStatuses = statuses.filter(hasPhoto);
-      consecutiveEmptyPages = (append && photoStatuses.length === 0) ? consecutiveEmptyPages + 1 : 0;
-
-      if (!append) {
-        state.lastSeenBefore = getInstanceData(state.instance, lastSeenKey(state.currentListId));
-        if (photoStatuses.length) {
-          saveInstanceData(state.instance, { [lastSeenKey(state.currentListId)]: photoStatuses[0].created_at });
-        }
+      if (append && nextMaxId) params.set('max_id', nextMaxId);
+      return `${path}?${params.toString()}`;
+    },
+    // By default boosts are excluded outright, not just ones without a
+    // photo — a stricter filter than hasPhoto() alone, so a page can come
+    // up empty (or thin) more often on a boost-heavy list/timeline. That's
+    // fine: this engine already re-checks after every page and keeps going
+    // regardless of *why* a page had little to show.
+    filterStatuses(statuses) {
+      const includeReblogs = getPreferredIncludeReblogs();
+      return statuses.filter(s => (includeReblogs || !s.reblog) && hasPhoto(s));
+    },
+    onFreshLoad(photoStatuses) {
+      timelineLastSeenBefore = getInstanceData(state.instance, lastSeenKey(state.currentListId));
+      if (photoStatuses.length) {
+        saveInstanceData(state.instance, { [lastSeenKey(state.currentListId)]: photoStatuses[0].created_at });
       }
-
-      renderStatuses(photoStatuses, append);
-      return true;
-    } catch (err) {
-      showError(el.timelineError, err.message);
-      return false;
-    }
-  }
-
-  function sentinelNearViewport() {
-    const rect = el.scrollSentinel.getBoundingClientRect();
-    return rect.top <= window.innerHeight + AUTO_LOAD_MARGIN_PX;
-  }
-
-  // Called after every loadTimeline() call settles. Covers both auto-paging
-  // through pages with zero photos (the sentinel doesn't move, so an
-  // IntersectionObserver alone would never refire) and a short list that
-  // fits on one screen after a fresh load (no enter/exit transition either).
-  function maybeLoadMore() {
-    if (pendingTimelineCalls > 0) return false;
-    if (el.timelineView.classList.contains('hidden')) return false; // must precede the geometry check below: a hidden ancestor collapses to a zeroed rect, which would otherwise read as "near the top"
-    if (!state.hasMore) return false;
-    if (consecutiveEmptyPages >= MAX_CONSECUTIVE_EMPTY_PAGES) return false;
-    if (!sentinelNearViewport()) return false;
-    loadTimeline(true);
-    return true;
-  }
-
-  const scrollObserver = new IntersectionObserver(() => maybeLoadMore(), {
-    rootMargin: `0px 0px ${AUTO_LOAD_MARGIN_PX}px 0px`,
+    },
+    renderCard(status) {
+      const isNew = !!timelineLastSeenBefore && new Date(status.created_at) > new Date(timelineLastSeenBefore);
+      return renderStatusCard(status, isNew, true);
+    },
   });
-  scrollObserver.observe(el.scrollSentinel);
 
-  // ---------- rendering ----------
-
-  function renderStatuses(statuses, append) {
-    if (!append) el.statuses.innerHTML = '';
-    statuses.forEach(status => {
-      el.statuses.appendChild(renderStatusCard(status));
-    });
-  }
+  // Profile shows only the logged-in account's own photo posts — boosts are
+  // always excluded server-side (exclude_reblogs=true) regardless of the
+  // "Show boosts in the feed" setting above, which only ever applies to
+  // Timeline. No "New" badge (own posts don't need a "since your last
+  // visit" marker, so no onFreshLoad) and no Favourite/Reblog actions, just
+  // "View post" (see renderStatusCard's third parameter).
+  const profileFeed = createFeedEngine({
+    view: el.profileView,
+    container: el.profileStatuses,
+    errorEl: el.profileError,
+    sentinel: el.profileScrollSentinel,
+    loadMoreEl: el.profileLoadMoreStatus,
+    buildPath(append, nextMaxId) {
+      const params = new URLSearchParams({ limit: '20', only_media: 'true', exclude_reblogs: 'true' });
+      if (append && nextMaxId) params.set('max_id', nextMaxId);
+      return `/api/v1/accounts/${state.accountId}/statuses?${params.toString()}`;
+    },
+    // only_media=true admits any media attachment, not specifically images
+    // (a status can carry 1-4 images, or exactly one video/gifv/audio) — so
+    // hasPhoto() is still required here, it's not redundant with that param.
+    // The tag filter (Settings > Profile, per-instance) is read fresh on
+    // every page rather than cached, so a change takes effect on the very
+    // next load without needing its own separate invalidation path.
+    filterStatuses(statuses) {
+      const tags = parseTagFilter(getInstanceData(state.instance, 'profileTags'));
+      return statuses.filter(s => hasPhoto(s) && statusMatchesTagFilter(s, tags));
+    },
+    onFreshLoad: null,
+    renderCard(status) {
+      return renderStatusCard(status, false, false, false);
+    },
+  });
 
   // ---------- blurhash ----------
   // Reimplementation of the public blurhash decode algorithm (https://blurha.sh) —
@@ -847,7 +1069,16 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
             img.addEventListener('error', () => img.removeEventListener('load', clearPlaceholder), { once: true });
           }
         }
-        img.addEventListener('error', () => { img.src = TRANSPARENT_PIXEL; }, { once: true });
+        img.addEventListener('error', () => {
+          img.src = TRANSPARENT_PIXEL;
+          // A single-photo post otherwise reserves space at the original
+          // photo's own aspect ratio (from the width/height attributes set
+          // above), which can be tall for a portrait shot — pointless once
+          // there's no photo left to show, just a blurhash placeholder.
+          // Force a shorter, fixed ratio instead (same 4:3 the multi-photo
+          // grid already uses, so this is a no-op there, not a conflict).
+          img.classList.add('media-load-failed');
+        }, { once: true });
         img.src = fullSrc;
         img.alt = att.description || 'Photo without a description';
         img.loading = 'lazy';
@@ -878,10 +1109,9 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
   const BOOST_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
   const LINK_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
 
-  function renderStatusCard(status) {
+  function renderStatusCard(status, isNew = false, interactiveActions = true, showAuthor = true) {
     const isReblog = !!status.reblog;
     const original = isReblog ? status.reblog : status;
-    const isNew = !!state.lastSeenBefore && new Date(status.created_at) > new Date(state.lastSeenBefore);
 
     const card = document.createElement('div');
     card.className = isNew ? 'status-card is-new' : 'status-card';
@@ -900,24 +1130,37 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
       card.appendChild(banner);
     }
 
-    const profileUrl = original.account.url;
-    const profileIsSafe = !!(profileUrl && isHttpUrl(profileUrl));
-    const displayName = renderEmojiText(original.account.display_name || original.account.username, original.account.emojis);
-    const avatarImg = `<img src="${escapeAttr(original.account.avatar)}" alt="">`;
-
     const header = document.createElement('div');
-    header.className = 'status-header';
-    header.innerHTML = `
-      ${profileIsSafe ? `<a href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">${avatarImg}</a>` : avatarImg}
-      <div class="status-author">
-        <div class="display-name">${profileIsSafe ? `<a href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">${displayName}</a>` : displayName}</div>
-        ${profileIsSafe
-          ? `<a class="username" href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">@${escapeHtml(original.account.acct)}</a>`
-          : `<div class="username">@${escapeHtml(original.account.acct)}</div>`}
-      </div>
-      <div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>
-    `;
-    setImgErrorFallback(header.querySelector('img'), AVATAR_FALLBACK);
+
+    if (showAuthor) {
+      const profileUrl = original.account.url;
+      const profileIsSafe = !!(profileUrl && isHttpUrl(profileUrl));
+      const displayName = renderEmojiText(original.account.display_name || original.account.username, original.account.emojis);
+      const avatarImg = `<img src="${escapeAttr(original.account.avatar)}" alt="">`;
+
+      header.className = 'status-header';
+      header.innerHTML = `
+        ${profileIsSafe ? `<a href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">${avatarImg}</a>` : avatarImg}
+        <div class="status-author">
+          <div class="display-name">${profileIsSafe ? `<a href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">${displayName}</a>` : displayName}</div>
+          ${profileIsSafe
+            ? `<a class="username" href="${escapeAttr(profileUrl)}" target="_blank" rel="noopener noreferrer">@${escapeHtml(original.account.acct)}</a>`
+            : `<div class="username">@${escapeHtml(original.account.acct)}</div>`}
+        </div>
+        <div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>
+      `;
+      setImgErrorFallback(header.querySelector('img'), AVATAR_FALLBACK);
+    } else {
+      // Profile already knows whose posts these are — repeating your own
+      // avatar/name on every single card is just noise there. Only the date
+      // remains, laid out as plain flowed text rather than reusing the
+      // avatar/name layout's position:absolute corner anchor (see
+      // .status-header.status-header-date-only in style.css), since that
+      // anchor exists specifically to coexist with the avatar/name row this
+      // variant doesn't have.
+      header.className = 'status-header status-header-date-only';
+      header.innerHTML = `<div class="status-date">${escapeHtml(formatStatusDate(original.created_at))}</div>`;
+    }
     card.appendChild(header);
 
     const media = buildMediaElement(original);
@@ -944,20 +1187,38 @@ import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, media
     const actions = document.createElement('div');
     actions.className = 'status-actions';
 
-    const favBtn = document.createElement('button');
-    favBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${FAV_ICON_SVG}</span><span class="sr-only">Favourite,</span> <span class="btn-count">${original.favourites_count}</span>`;
-    if (original.favourited) favBtn.classList.add('active');
-    favBtn.addEventListener('click', () => toggleFavourite(original.id, favBtn));
-    actions.appendChild(favBtn);
+    if (interactiveActions) {
+      const favBtn = document.createElement('button');
+      favBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${FAV_ICON_SVG}</span><span class="sr-only">Favourite,</span> <span class="btn-count">${original.favourites_count}</span>`;
+      if (original.favourited) favBtn.classList.add('active');
+      favBtn.addEventListener('click', () => toggleFavourite(original.id, favBtn));
+      actions.appendChild(favBtn);
 
-    const boostBtn = document.createElement('button');
-    boostBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span><span class="sr-only">Reblog,</span> <span class="btn-count">${original.reblogs_count}</span>`;
-    if (original.reblogged) boostBtn.classList.add('active');
-    if (original.visibility === 'private' || original.visibility === 'direct') {
-      boostBtn.disabled = true;
+      const boostBtn = document.createElement('button');
+      boostBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span><span class="sr-only">Reblog,</span> <span class="btn-count">${original.reblogs_count}</span>`;
+      if (original.reblogged) boostBtn.classList.add('active');
+      if (original.visibility === 'private' || original.visibility === 'direct') {
+        boostBtn.disabled = true;
+      }
+      boostBtn.addEventListener('click', () => toggleReblog(original.id, boostBtn));
+      actions.appendChild(boostBtn);
+    } else {
+      // Profile: show the counts (how many favourites/boosts a post got)
+      // without offering the action — plain <span>s, not <button>s, since
+      // they're not interactive controls, just stats. Same icon+count markup
+      // shape as the real buttons above, but .status-stat declares its own
+      // box styling explicitly (same reason .view-original-btn does below:
+      // non-button elements don't inherit the bare `button {}` reset).
+      const favStat = document.createElement('span');
+      favStat.className = 'status-stat';
+      favStat.innerHTML = `<span class="btn-icon" aria-hidden="true">${FAV_ICON_SVG}</span><span class="sr-only">Favourites:</span> <span class="btn-count">${original.favourites_count}</span>`;
+      actions.appendChild(favStat);
+
+      const boostStat = document.createElement('span');
+      boostStat.className = 'status-stat';
+      boostStat.innerHTML = `<span class="btn-icon" aria-hidden="true">${BOOST_ICON_SVG}</span><span class="sr-only">Boosts:</span> <span class="btn-count">${original.reblogs_count}</span>`;
+      actions.appendChild(boostStat);
     }
-    boostBtn.addEventListener('click', () => toggleReblog(original.id, boostBtn));
-    actions.appendChild(boostBtn);
 
     if (original.url && isHttpUrl(original.url)) {
       const originalLink = document.createElement('a');

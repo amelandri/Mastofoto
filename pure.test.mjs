@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, mediaGridColumns } from './pure.mjs';
+import { isHttpUrl, hasPhoto, parseNextMaxId, escapeHtml, renderEmojiText, mediaGridColumns, parseTagFilter, statusMatchesTagFilter } from './pure.mjs';
 
 test('isHttpUrl accepts http(s) URLs', () => {
   assert.equal(isHttpUrl('https://example.com/foo'), true);
@@ -90,4 +90,30 @@ test('mediaGridColumns uses 2 columns when the count divides evenly by 2', () =>
 test('mediaGridColumns falls back to 2 columns for a count divisible by neither (e.g. 5)', () => {
   assert.equal(mediaGridColumns(5), 2);
   assert.equal(mediaGridColumns(7), 2);
+});
+
+test('parseTagFilter strips "#", trims, lowercases, and drops empty entries', () => {
+  assert.deepEqual(parseTagFilter('#cats, #Sunset,  , #Travel'), ['cats', 'sunset', 'travel']);
+});
+
+test('parseTagFilter returns [] for empty/missing input', () => {
+  assert.deepEqual(parseTagFilter(''), []);
+  assert.deepEqual(parseTagFilter(null), []);
+  assert.deepEqual(parseTagFilter(undefined), []);
+});
+
+test('statusMatchesTagFilter matches with no filter set', () => {
+  assert.equal(statusMatchesTagFilter({ tags: [] }, []), true);
+});
+
+test('statusMatchesTagFilter matches if the status has any one of the listed tags (OR, not AND)', () => {
+  const status = { tags: [{ name: 'cats' }] };
+  assert.equal(statusMatchesTagFilter(status, ['cats', 'sunset']), true);
+});
+
+test('statusMatchesTagFilter is case-insensitive and rejects a status with none of the listed tags', () => {
+  const status = { tags: [{ name: 'Cats' }] };
+  assert.equal(statusMatchesTagFilter(status, ['cats']), true);
+  assert.equal(statusMatchesTagFilter({ tags: [{ name: 'dogs' }] }, ['cats']), false);
+  assert.equal(statusMatchesTagFilter({ tags: [] }, ['cats']), false);
 });

@@ -19,8 +19,10 @@
   --link: #1a6699;
   --link-header: #666666;
   --link-header-hover: rgba(255, 255, 255, 0.3);
+  --nav-active: var(--link);
   --shadow: rgba(0, 0, 0, 0.1);
   --overlay-bg: rgba(0, 0, 0, 0.9);
+  --photo-scrim: rgba(0, 0, 0, 0.65);
   --lightbox-btn-bg: rgba(255, 255, 255, 0.15);
   --lightbox-btn-bg-hover: rgba(255, 255, 255, 0.3);
 }
@@ -44,8 +46,10 @@
   --link: #5aa9e6;
   --link-header: #5aa9e6;
   --link-header-hover: #1c69a0;
+  --nav-active: var(--text);
   --shadow: rgba(0, 0, 0, 0);
   --overlay-bg: rgba(0, 0, 0, 0.9);
+  --photo-scrim: rgba(0, 0, 0, 0.65);
   --lightbox-btn-bg: rgba(255, 255, 255, 0.15);
   --lightbox-btn-bg-hover: rgba(255, 255, 255, 0.3);
 }
@@ -101,6 +105,23 @@ body {
   padding: 4px 2px;
   color: var(--link-header);
   font-weight: 600;
+}
+
+/* Text color only, not a background fill. --nav-active is themed
+   independently rather than reused directly from --link/--text: in light
+   mode it's blue (aliases --link) since blue reads clearly against the
+   light header; in dark mode plain --link doesn't work as the *active*
+   color because --link-header (the resting color) and --link are the
+   exact same value there (#5aa9e6) — no visible difference from resting —
+   so dark mode aliases --text instead, the app's full-strength text color,
+   which passes contrast comfortably and reads clearly distinct from both
+   the muted resting --link-header and the hover --link. */
+#session-info button.active {
+  color: var(--nav-active);
+}
+
+#session-info button.active .btn-icon {
+  opacity: 1;
 }
 
 #session-info button .btn-label:hover {
@@ -317,6 +338,17 @@ label {
   color: var(--text-secondary);
 }
 
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  cursor: pointer;
+}
+
 input[type="text"], select {
   width: 100%;
   padding: 8px 10px;
@@ -445,8 +477,42 @@ button:hover {
   border-top: none;
 }
 
+/* A labeled grouping *within* a .settings-section (e.g. Profile's "Display"
+   vs "Filters") — unlike the plain, unlabeled .sub-settings-section above,
+   this one carries its own small heading, so the visual hierarchy reads
+   clearly at three distinct levels: h3 section title (full text color,
+   default weight) > this muted, uppercase, letter-spaced label > the
+   controls/field labels themselves (also muted, but not uppercase — see
+   the plain `label` rule). */
+.settings-subsection + .settings-subsection {
+  margin-top: 24px;
+}
+
+.settings-subsection-heading {
+  margin: 0 0 10px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 #list-members-heading {
-  margin: 20px 0 8px;
+  margin: 20px 0 0;
+}
+
+#list-members-heading summary {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+#list-members-heading summary:hover {
+  color: var(--text);
+}
+
+#list-members-heading[open] summary {
+  margin-bottom: 8px;
 }
 
 #list-members {
@@ -522,8 +588,74 @@ a.member-name:hover {
   transform: rotate(180deg);
 }
 
-#timeline-container {
+#timeline-container,
+#profile-container {
   min-width: 0;
+}
+
+#profile-banner {
+  position: relative;
+  aspect-ratio: 3 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: var(--btn-secondary-bg);
+}
+
+#profile-banner-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Name/handle sit directly on top of the banner photo (overlaid), not below
+   it — a gradient scrim (not a theme token, deliberately the same fixed dark
+   value in both themes, same reasoning as --overlay-bg: it's
+   compositing over unpredictable user-photo content, not the app's own
+   surface) keeps --accent-contrast (white) text legible regardless of how
+   bright the underlying banner image is. */
+#profile-banner-info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 16px;
+  background: linear-gradient(to top, var(--photo-scrim), transparent);
+}
+
+#profile-banner-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--accent-contrast);
+  background: var(--btn-secondary-bg);
+}
+
+#profile-banner-names {
+  min-width: 0;
+  color: var(--accent-contrast);
+}
+
+#profile-banner-displayname {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#profile-banner-username {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .status-card {
@@ -565,6 +697,21 @@ a.member-name:hover {
   gap: 10px;
   margin-bottom: 14px;
   padding-right: 110px;
+}
+
+/* Profile's cards (no avatar/author row — see renderStatusCard()'s
+   showAuthor param): .status-date's usual position:absolute corner anchor
+   exists to coexist with that row and the "New" badge, neither of which
+   exist here, so it's flowed normally instead — the higher specificity
+   (two classes) beats both this desktop padding-right and the mobile
+   override below unconditionally, regardless of source order. */
+.status-header.status-header-date-only {
+  padding-right: 0;
+  justify-content: flex-end;
+}
+
+.status-header.status-header-date-only .status-date {
+  position: static;
 }
 
 .status-header img {
@@ -671,6 +818,15 @@ img.emoji {
   background-position: center;
 }
 
+/* A single-photo post normally keeps the photo's own aspect ratio (via its
+   width/height attributes); once it's failed to load for good, there's
+   nothing left to preserve that ratio for, so fall back to a shorter, fixed
+   4:3 box (same ratio the multi-photo grid below already uses) instead of
+   whatever tall shape a portrait photo happened to be. */
+.status-media img.media-load-failed {
+  aspect-ratio: 4 / 3;
+}
+
 .status-media-grid {
   grid-template-columns: repeat(var(--media-columns, 2), minmax(0, 1fr));
 }
@@ -749,19 +905,28 @@ img.emoji {
 }
 
 .status-actions button,
-.status-actions .view-original-btn {
+.status-actions .view-original-btn,
+.status-actions .status-stat {
   margin-top: 0;
   background: var(--btn-secondary-bg);
   color: var(--text);
   font-size: 0.85rem;
 }
 
-.status-actions .view-original-btn {
+.status-actions .view-original-btn,
+.status-actions .status-stat {
   display: inline-flex;
   align-items: center;
   padding: 8px 16px;
   border-radius: 6px;
   text-decoration: none;
+}
+
+/* Profile's read-only favourite/boost counts: same icon+count shape as the
+   real buttons, but never a <button> — there's no action to take, so no
+   pointer cursor, no hover/active state, no click handler. */
+.status-actions .status-stat {
+  cursor: default;
 }
 
 .status-actions button.active {
@@ -779,11 +944,13 @@ img.emoji {
   align-items: center;
 }
 
-#scroll-sentinel {
+#scroll-sentinel,
+#profile-scroll-sentinel {
   height: 1px;
 }
 
-#load-more-status {
+#load-more-status,
+#profile-load-more-status {
   text-align: center;
   margin: 10px auto;
 }
@@ -808,8 +975,30 @@ img.emoji {
     padding: 10px 10px 0 10px;
   }
 
+  #profile-banner-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+  }
+
+  #profile-banner-info {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  #profile-banner-username {
+    font-size: 0.75rem;
+  }
+
   #app{
     padding: 10px;
+  }
+
+  #session-info {
+    /* 5 icon-only buttons (was 3, before Timeline/Profile) at the 12px
+       desktop gap leaves ~0 spare width on a 320px viewport next to the
+       logo — tighten it here rather than shrinking the buttons themselves. */
+    gap: 6px;
   }
 
   #session-info button {
